@@ -1,0 +1,177 @@
+/* src/pages/EmailSignup.css */
+
+.signupPage {
+  min-height: 100vh;
+  width: 100%;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #ffffff;
+  font-family: Pretendard, system-ui, -apple-system, sans-serif;
+}
+
+.signupWrap {
+  width: 420px;
+  max-width: calc(100vw - 40px);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.signupLogo {
+  margin-bottom: 18px;
+}
+.signupLogo img {
+  width: 220px;
+  height: auto;
+  display: block;
+}
+
+.signupTitle {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 22px;
+  color: #111;
+}
+
+.userTypeRow {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.userTypeBtn {
+  height: 48px;
+  padding: 0 58px;
+  border-radius: 10px;
+  border: 1px solid #d9d9d9;
+  background: #fff;
+  font-size: 18px;
+  font-weight: 600;
+  cursor: pointer;
+  color: #333;
+}
+
+.userTypeBtn.active {
+  background: #2D9DFF;
+  border-color: #2D9DFF;
+  color: #fff;
+}
+
+.userTypeSuffix {
+  font-size: 30px;
+  font-weight: 400;
+  color: #333;
+  margin-left: 2px;
+}
+
+.signupForm {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.inputRow {
+  position: relative;
+  width: 100%;
+}
+
+.inputIcon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 18px;
+  color: #777;
+}
+
+.inputRow input {
+  width: 100%;
+  height: 48px;
+  border: 1px solid #d9d9d9;
+  border-radius: 10px;
+  padding: 0 14px 0 44px;
+  font-size: 14px;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.inputRow input:focus {
+  border-color: #2D9DFF;
+}
+
+.regionHelper {
+  width: 100%;
+  margin: -8px 0 0;
+  font-size: 12px;
+  color: #999;
+}
+
+
+.signupError {
+  width: 100%;
+  margin: -6px 0 0;
+  font-size: 12px;
+  color: #e53935;
+}
+
+.termsBox {
+  width: 100%;
+  margin-top: 8px;
+}
+
+.termsTitle {
+  font-size: 14px;
+  font-weight: 600;
+  margin-bottom: 10px;
+  color: #111;
+}
+
+.termsRow {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+}
+
+.termsLeft {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #555;
+}
+
+.termsViewBtn {
+  border: 0;
+  background: transparent;
+  font-weight: 500;
+  font-size: 13px;
+  cursor: pointer;
+  color: #111;
+}
+
+
+.primaryBtn {
+  margin-top: 14px;
+  width: 100%;
+  height: 50px;
+  border: 0;
+  border-radius: 10px;
+  background: #2D9DFF;
+  color: #fff;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.primaryBtn.isDisabled {
+  background: #d9d9d9 !important;
+  color: #888 !important;
+  cursor: not-allowed;
+}

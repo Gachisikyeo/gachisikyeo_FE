@@ -1,0 +1,180 @@
+/* src/pages/Login.css */
+/* 우리파란색 2D9DFF */
+.loginPage {
+  min-height: 100vh;
+  width: 100%;
+  padding-top: 10px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  background: #ffffff;
+  font-family: Pretendard, system-ui, -apple-system, sans-serif;
+}
+
+.loginWrap {
+  width: 420px;
+  max-width: calc(100vw - 40px);
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.loginLogo {
+  margin-bottom: 8px;
+}
+
+.loginLogo__placeholder {
+  font-size: 56px;
+  font-weight: 800;
+  color: #2D9DFF;
+  letter-spacing: -1px;
+}
+
+.loginLogo img {
+  width: 300px;
+  height: auto;
+  display: block;
+}
+
+.loginTitle {
+  font-size: 28px;
+  font-weight: 600;
+  margin: 6px 0 18px;
+  color: #111;
+}
+
+.loginForm {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.inputRow {
+  position: relative;
+  width: 100%;
+}
+
+.inputIcon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  font-size: 18px;
+  color: #777;
+}
+
+.inputRow input {
+  width: 100%;
+  height: 48px;
+  border: 1px solid #d9d9d9;
+  border-radius: 10px;
+  padding: 0 14px 0 44px;
+  font-size: 14px;
+  outline: none;
+  box-sizing: border-box;
+}
+
+.inputRow input:focus {
+  border-color: #2D9DFF;
+}
+
+.loginError {
+  width: 100%;
+  margin: -6px 0 0;
+  font-size: 12px;
+  color: #e53935;
+}
+
+.primaryBtn {
+  margin-top: 8px;
+  width: 100%;
+  height: 50px;
+  border: 0;
+  border-radius: 10px;
+  background: #2f86ff;
+  color: #fff;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+  box-sizing: border-box;
+}
+
+.primaryBtn.isDisabled {
+  background: #d9d9d9 !important;
+  color: #888 !important;
+  cursor: not-allowed;
+}
+
+.helperRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  font-size: 15px;
+  color: #666;
+  margin-top: -4px;
+}
+
+.emailSignupBtn {
+  border: 0;
+  background: #efefef;
+  color: #444;
+  font-size: 14px;
+  padding: 5px 10px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.primaryBtn {
+  margin-top: 8px;
+  width: 100%;
+  height: 50px;
+  border: 0;
+  border-radius: 10px;
+  background: #2D9DFF;
+  color: #fff;
+  font-weight: 700;
+  font-size: 15px;
+  cursor: pointer;
+}
+
+.primaryBtn:active {
+  transform: translateY(1px);
+}
+
+.snsArea {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 20px;      
+  margin-top: 40px; 
+}
+
+.snsDivider {
+  width: 100%;
+  text-align: center;
+  font-size: 12px;
+  color: #666;
+  margin: 0;
+}
+
+.googleBtn {
+  width: 100%;
+  height: 50px;
+  border: 1px solid #e1e1e1;
+  background: #fff;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  font-size: 17px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.googleIcon {
+  font-size: 20px;
+}

@@ -1,0 +1,105 @@
+.addrOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.35);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+  font-family: Pretendard, system-ui, -apple-system, sans-serif;
+}
+
+.addrModal {
+  width: 720px;
+  max-width: calc(100vw - 40px);
+  background: #fff;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+}
+
+.addrHeader {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 20px;
+  border-bottom: 1px solid #eee;
+}
+
+.addrTitle {
+  font-size: 18px;
+  font-weight: 800;
+}
+
+.addrClose {
+  border: 0;
+  background: transparent;
+  font-size: 26px;
+  cursor: pointer;
+  line-height: 1;
+}
+
+.addrBody {
+  padding: 18px 20px;
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 14px;
+}
+
+.addrRow {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.addrLabel {
+  font-size: 13px;
+  font-weight: 700;
+  color: #333;
+}
+
+.addrSelect {
+  height: 44px;
+  border: 1px solid #d9d9d9;
+  border-radius: 10px;
+  padding: 0 12px;
+  font-size: 14px;
+  outline: none;
+}
+
+.addrSelect:focus {
+  border-color: #2f86ff;
+}
+
+.addrFooter {
+  padding: 16px 20px 20px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+  border-top: 1px solid #eee;
+}
+
+.addrBtn {
+  height: 44px;
+  padding: 0 18px;
+  border-radius: 10px;
+  border: 0;
+  font-weight: 800;
+  cursor: pointer;
+}
+
+.addrBtn.cancel {
+  background: #f2f2f2;
+  color: #333;
+}
+
+.addrBtn.confirm {
+  background: #2f86ff;
+  color: #fff;
+}
+
+.addrBtn.confirm.isDisabled {
+  background: #d9d9d9 !important;
+  color: #888 !important;
+  cursor: not-allowed;
+}

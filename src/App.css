@@ -1,42 +1,374 @@
-#root {
-  max-width: 1280px;
+@import "pretendard/dist/web/static/pretendard.css";
+
+:root {
+  --layout-max-width: 1120px;
+  --layout-padding-x: 16px;
+  --primary-color: #2D9DFF;
+  --border-color: #eee;
+  --text-muted: #777;
+}
+
+/* layout */
+.app-layout {
+  max-width: var(--layout-max-width);
   margin: 0 auto;
-  padding: 2rem;
-  text-align: center;
+  padding: 40 var(--layout-padding-x); /* 우측 상단 버튼들 위치 */
 }
 
-.logo {
-  height: 6em;
-  padding: 1.5em;
-  will-change: filter;
-  transition: filter 300ms;
-}
-.logo:hover {
-  filter: drop-shadow(0 0 2em #646cffaa);
-}
-.logo.react:hover {
-  filter: drop-shadow(0 0 2em #61dafbaa);
+/* base */
+body {
+  margin: 0;
+  font-family: "Pretendard", system-ui, -apple-system, BlinkMacSystemFont,
+    "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
 }
 
-@keyframes logo-spin {
-  from {
-    transform: rotate(0deg);
-  }
-  to {
-    transform: rotate(360deg);
-  }
+/* Header */
+.header {
+  padding: 12px 0;
+  margin-bottom: 12px;
+  border-bottom: none;
 }
 
-@media (prefers-reduced-motion: no-preference) {
-  a:nth-of-type(2) .logo {
-    animation: logo-spin infinite 20s linear;
-  }
+.header-top {
+  max-width: var(--layout-max-width);
+  margin: 0 auto;
+  padding: 0 var(--layout-padding-x);
+
+  display: flex;
+  justify-content: flex-end;
+  align-items: center;
+  min-height: 22px; 
 }
 
-.card {
-  padding: 2em;
+.header-topRight {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 14px;
+  color: #333;
+  white-space: nowrap;
 }
 
-.read-the-docs {
-  color: #888;
+.header-topBtn {
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 0;
+  font-size: 12px;
+  color: #333;
+}
+
+.header-topDivider {
+  color: #999;
+}
+
+
+.header-buyerBox {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.header-buyerNick {
+  color: #333;
+}
+
+.header-buyerDivider {
+  color: #999;
+}
+
+.header-myPageBtn {
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 0;
+  font-size: 12px;
+  color: #333;
+}
+
+.header-sellerBtn {
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 0;
+  font-size: 12px;
+  color: #333;
+  white-space: nowrap;
+}
+
+.header-inner {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 10px;
+}
+
+.header-logoButton {
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+}
+
+.header-logoImage {
+  height: 85px;
+  display: block;
+}
+
+.header-searchWrapper {
+  position: relative;
+  flex: 0 0 400px;
+  max-width: 400px;
+}
+
+.header-searchInput {
+  width: 100%;
+  padding: 14px 0px 14px 14px; 
+  border-radius: 999px;
+  border: 1px solid #ccc;
+  font-size: 14px;
+  outline: none;
+}
+
+.header-searchIconBtn {
+  position: absolute;
+  right: 10px;
+  top: 50%;
+  transform: translateY(-50%);
+  border: none;
+  background: none;
+  padding: 0;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.header-searchIconBtn svg {
+  font-size: 12px;
+  color: #726a6a;
+}
+
+.header-topIcon {
+  font-size: 20px;
+  color: #111;
+  flex: 0 0 auto;
+}
+
+.header-buyerName {
+  font-weight: 600;
+  color: #111;
+}
+
+.header-buyerHonorific {
+  font-weight: 400;
+  color: #111;
+}
+
+/* 판매자: 마켓이름만 굵게 */
+.header-sellerBtn {
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 0;
+  font-size: 12px;
+  color: #333;
+  white-space: nowrap;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.header-sellerName {
+  font-weight: 700;
+  color: #111;
+}
+
+
+
+/* Category Nav */
+.category-nav {
+  border-bottom: 1px solid var(--border-color);
+  padding: 2px 20px 12px;
+}
+
+.category-nav__inner {
+  display: flex;
+  justify-content: center;
+}
+
+.category-nav__row {
+  display: flex;
+  align-items: center;
+  gap: 56px; 
+}
+
+.category-nav__left {
+  min-width: 120px;
+  display: flex;
+  align-items: center;
+}
+
+/* 구매자 위치 */
+.category-nav__locationBtn {
+  padding: 4px 14px;
+  border-radius: 999px;
+  border: 1px solid #E0E0E0;
+  background: #E0E0E0;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.category-nav__locationBtn svg {
+  font-size: 11px;
+}
+
+/* 판매자 페이지 버튼 */
+.category-nav__sellerBtn {
+  padding: 4px 14px;
+  border-radius: 999px;
+  border: 1px solid #E0E0E0;
+  background: #fff;
+  font-size: 13px;
+  cursor: pointer;
+  white-space: nowrap;
+}
+
+.category-nav__menus {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  align-items: center;
+  gap: 100px; 
+  white-space: nowrap;
+}
+
+.category-nav__menuBtn {
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 8px 0;
+  font-weight: 400;
+  font-size: 13.5px;
+}
+
+/* Ad Banner */
+.ad-banner {
+  margin: 36px 0 24px;
+}
+
+.ad-banner__imageWrapper {
+  overflow: hidden;
+}
+
+.ad-banner__image {
+  display: block;
+  width: 100%;
+  height: 300px;
+  object-fit: cover;
+}
+
+/* Product Section / Card */
+.product-section {
+  margin: 40px auto 0;
+  max-width: 1050px;
+  padding: 0 var(--layout-padding-x);
+}
+
+.product-section__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.product-section__title {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.product-section__moreBtn {
+  border: none;
+  background: none;
+  font-size: 15px;
+  color: #555;
+  cursor: pointer;
+}
+
+.product-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+  gap: 16px;
+  align-items: stretch;
+}
+
+.product-card {
+  border: 1px solid var(--border-color);
+  border-radius: 16px;
+  padding: 10px 10px 4px;
+  display: flex;
+  flex-direction: column;
+  gap: 0px;
+  cursor: pointer;
+  height: 100%;
+}
+
+.product-card__imageBox {
+  width: 100%;
+  aspect-ratio: 4 / 2.5;
+  border-radius: 12px;
+  overflow: hidden;
+  background: #fff;
+  margin-bottom: 17px;
+}
+
+.product-card__image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.product-card__title,
+.product-card__market,
+.product-card__unit,
+.product-card__price {
+  margin: 0;
+}
+
+.product-card__title {
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.4;
+
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+  min-height: 1.5em;
+}
+
+.product-card__market {
+  font-size: 10px;
+  color: var(--text-muted);
+  min-height: 1.8em;
+}
+
+.product-card__unit {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.product-card__price {
+  margin-top: 8px;
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--primary-color);
 }

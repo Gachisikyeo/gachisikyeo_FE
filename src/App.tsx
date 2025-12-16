@@ -1,10 +1,25 @@
+// src/App.tsx
+import { BrowserRouter, Routes, Route } from "react-router-dom";
+import Home from "./pages/Home";
+import Login from "./pages/Login";
+import EmailSignup from "./pages/EmailSignup";
+import GoogleSignup from "./pages/GoogleSignup";
+import SignupSuccess from "./pages/SignupSuccess";
+
+import "./App.css";
+
 function App() {
-  console.log("로그 메시지 출력");
   return (
-    <div>
-      <h1>같이시켜</h1>
-      <p>메인페이지</p>
-    </div>
+    
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/signup/email" element={<EmailSignup />} />
+        <Route path="/signup/google" element={<GoogleSignup />} />
+        <Route path="/signup/success" element={<SignupSuccess />} />
+
+      </Routes>
+  
   );
 }
 
