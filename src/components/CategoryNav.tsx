@@ -1,4 +1,4 @@
-// 위치 or 판매자페이지 버튼 + 메뉴 + 마이페이지 버튼
+// 위치 or 판매자페이지 버튼 + 메뉴
 // src/components/CategoryNav.tsx
 import { FaMapMarkerAlt } from "react-icons/fa";
 import { NavLink, useNavigate } from "react-router-dom";
@@ -56,14 +56,6 @@ function CategoryNav({ user }: CategoryNavProps) {
               </li>
             ))}
           </ul>
-
-          {!isGuest && isBuyer && (
-            <div className="category-nav__right">
-              <button type="button" className="category-nav__myPageBtn" onClick={() => navigate("/mypage")}>
-                마이페이지
-              </button>
-            </div>
-          )}
         </div>
       </div>
     </nav>

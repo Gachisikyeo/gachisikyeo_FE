@@ -45,7 +45,6 @@ export default function GoogleSignup() {
 
   const [errorMsg, setErrorMsg] = useState("");
 
-  // ✅ URL로 oauth2SignupToken이 들어오면 세션에 저장 (query든 hash든 다 처리)
   useEffect(() => {
     const token = getParamFromSearchOrHash("oauth2SignupToken");
     if (token) setOAuth2SignupToken(token);

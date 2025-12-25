@@ -1,5 +1,4 @@
 // 상품 공구 목록 페이지
-// 상품 공구 목록 페이지
 // src/pages/ProductGroupPurchaseListPage.tsx
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate, useParams } from "react-router-dom";
@@ -15,7 +14,7 @@ import * as API from "../api/api";
 
 import "./ProductGroupPurchaseListPage.css";
 
-// ✅ 이따 지우기
+// 이따 지우기
 const USE_MOCK = true;
 
 type ProductDetailDto = {
@@ -44,7 +43,6 @@ type GroupPurchaseListItem = {
   currentQuantity?: number;
   targetQuantity?: number;
 
-  // 스웨거: groupEndAt
   groupEndAt?: string;
 
   status?: string;
@@ -75,7 +73,6 @@ export default function ProductGroupPurchaseListPage() {
   const [isJoinOpen, setIsJoinOpen] = useState(false);
   const [selectedGp, setSelectedGp] = useState<GroupPurchaseListItem | null>(null);
 
-  // ✅ 모달 Props에 onPaid가 없다고 뜨는 TS 충돌 방지(컴파일 에러 제거)
   const GPCreateModal = GroupPurchaseCreateModal as unknown as any;
   const GPJoinModal = GroupPurchaseJoinModal as unknown as any;
 
@@ -107,7 +104,6 @@ export default function ProductGroupPurchaseListPage() {
 
   const reloadGroupPurchases = async () => {
     try {
-      // 스웨거: GET /api/products/{productId}/group-purchases
       const fn = (API as any).getGroupPurchasesByProductId as ((id: number) => Promise<any>) | undefined;
       if (!fn) {
         setGroupPurchases([]);
@@ -174,7 +170,6 @@ export default function ProductGroupPurchaseListPage() {
       await reloadGroupPurchases();
 
       try {
-        // 스웨거: GET /api/products/{id}
         const fn = (API as any).getProductById as ((id: number) => Promise<any>) | undefined;
         if (!fn) throw new Error("getProductById is not exported in api.ts");
 
@@ -191,7 +186,6 @@ export default function ProductGroupPurchaseListPage() {
     load();
   }, [pid]);
 
-  // 진행중만 보여주기(OPEN)
   const openGroupPurchases = useMemo(
     () => groupPurchases.filter((gp) => gp.status === "OPEN"),
     [groupPurchases]
@@ -287,7 +281,6 @@ export default function ProductGroupPurchaseListPage() {
           packCount={product.unitQuantity ?? 12}
           eachPriceFromBE={(product as any)?.eachPrice}
           user={user}
-          // onPaid 타입 충돌 방지용 (결제완료 페이지 이동)
           onPaid={(payload: { productId: number; productName: string; totalPrice: number }) => {
             const buyerName = user.nickName ?? user.name ?? "익명";
             const orderNo = `GP-${Date.now()}`;

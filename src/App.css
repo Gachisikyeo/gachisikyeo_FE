@@ -1,3 +1,4 @@
+/* 헤더 메뉴바 상품카드 스타일 */
 @import "pretendard/dist/web/static/pretendard.css";
 
 :root {
@@ -180,6 +181,9 @@ body {
   margin-left: 0px;
 
 }
+
+.header-buyerBox .header-topBtn:hover { text-decoration: underline; }
+
 
 
 .category-nav {
@@ -401,7 +405,6 @@ body {
   color: var(--primary-color);
 }
 
-/* 메뉴 페이지들에서 더보기 버튼 ㄴ */
 .page-list .product-section__moreBtn {
   display: none;
 }

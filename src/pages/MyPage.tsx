@@ -1,5 +1,4 @@
-
-// // 마이페이지
+// 마이페이지
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -178,11 +177,11 @@ export default function MyPage() {
 
           <section className="mypage__list">
             {loading && completedItems.length === 0 ? (
-              <div className="mypage__empty">불러오는 중이야…</div>
+              <div className="mypage__empty">불러오는 중이에요</div>
             ) : completedItems.length === 0 ? (
-              <div className="mypage__empty">주문내역이 아직 없어!</div>
+              <div className="mypage__empty">주문내역이 아직 없어요</div>
             ) : (
-              completedItems.map((o) => <OrderRow key={o.id} order={o} onClick={() => navigate(`/mypage/orders/${o.id}`)} />)
+              completedItems.map((o: any) => <OrderRow key={o.id} order={o} onClick={() => navigate(`/mypage/orders/${o.id}`)} />)
             )}
 
             {canToggleCompleted && (
@@ -196,11 +195,11 @@ export default function MyPage() {
 
           <section className="mypage__list">
             {loading && ongoingItems.length === 0 ? (
-              <div className="mypage__empty">불러오는 중이야…</div>
+              <div className="mypage__empty">불러오는 중이에요</div>
             ) : ongoingItems.length === 0 ? (
-              <div className="mypage__empty">참가중인 공구가 아직 없어!</div>
+              <div className="mypage__empty">참가중인 공구가 아직 없어요</div>
             ) : (
-              ongoingItems.map((o) => <OrderRow key={o.id} order={o} onClick={() => {}} />)
+              ongoingItems.map((o: any) => <OrderRow key={o.id} order={o} onClick={() => {}} />)
             )}
 
             {canToggleOngoing && (

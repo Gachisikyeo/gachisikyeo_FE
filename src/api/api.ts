@@ -222,8 +222,8 @@ export const oauth2Signup = (data: {
 };
 
 export const getGoogleAuthorizationUrl = () => {
-  if (baseURL === "") return "/oauth2/authorization/google"; 
-  return `${baseURL}/oauth2/authorization/google`; 
+  if (baseURL === "") return "/oauth2/authorization/google";
+  return `${baseURL}/oauth2/authorization/google`;
 };
 
 export const getSidoList = () => {
@@ -244,7 +244,6 @@ export const resolveLawDong = (payload: { sido: string; sigungu: string; dong: s
     { params: payload }
   );
 };
-
 
 export type BusinessInfoRequest = {
   businessNumber: string;
@@ -267,6 +266,18 @@ export type BusinessInfoResponse = {
 
 export const createBusinessInfo = (data: BusinessInfoRequest) => {
   return api.post<ApiResponseTemplate<BusinessInfoResponse>>("/api/business-info", data);
+};
+
+export const getMyBusinessInfo = async () => {
+  try {
+    return await api.get<ApiResponseTemplate<BusinessInfoResponse>>("/api/business-info/me");
+  } catch (e: any) {
+    const status = e?.response?.status;
+    if (status === 404 || status === 405) {
+      return api.get<ApiResponseTemplate<BusinessInfoResponse>>("/api/business-info");
+    }
+    throw e;
+  }
 };
 
 export const uploadFiles = (files: File[]) => {
@@ -362,8 +373,6 @@ export type MypageGroupPurchaseDto = {
   quantity: number;
   pickupLocation?: string;
   pickupTime?: string;
-
-  // 백엔드가 추후 내려주면 이걸로 상세 조회 id를 쓰게 됨
   participationId?: number;
 };
 
@@ -397,6 +406,5 @@ export const getMypageMain = (params?: { completed?: boolean; ongoing?: boolean 
 export const getMypageCompletedDetail = (participationId: number) => {
   return api.get<CompletedGroupPurchaseDetailDto>(`/api/mypage/completed/${participationId}`);
 };
-
 
 export default api;

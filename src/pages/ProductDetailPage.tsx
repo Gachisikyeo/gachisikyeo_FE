@@ -1,5 +1,4 @@
 // 상품 상세 페이지
-// 상품 상세 페이지
 // src/pages/ProductDetailPage.tsx
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
@@ -17,7 +16,7 @@ import * as API from "../api/api";
 import { CiDeliveryTruck } from "react-icons/ci";
 import "./ProductDetailPage.css";
 
-// 스타일 작업 임시 (다 끝나면 false로 바꿔!)
+// 임시
 const USE_MOCK = true;
 
 type ProductDetailDto = {
@@ -30,12 +29,11 @@ type ProductDetailDto = {
   category?: string;
   descriptionTitle?: string;
   description?: string;
-  // 백엔드가 줄 수도 있는 값(없으면 계산해서 씀)
+  // 임시?
   eachPrice?: number;
 };
 
 type GroupPurchaseListItem = {
-  // 백엔드/기존 코드가 둘 중 뭘 주든 대응
   id?: number;
   groupPurchaseId?: number;
 
@@ -84,7 +82,6 @@ export default function ProductDetailPage() {
   const [isJoinOpen, setIsJoinOpen] = useState(false);
   const [selectedGp, setSelectedGp] = useState<GroupPurchaseListItem | null>(null);
 
-  // ✅ 모달 컴포넌트 타입 충돌 방지(Props에 onPaid가 없다고 뜨는 TS 에러 제거)
   const GPCreateModal = GroupPurchaseCreateModal as unknown as any;
   const GPJoinModal = GroupPurchaseJoinModal as unknown as any;
 
@@ -135,7 +132,7 @@ export default function ProductDetailPage() {
   useEffect(() => {
     if (!pid || Number.isNaN(pid)) return;
 
-    // ✅ 임시 mock
+    // 임시 mock
     if (USE_MOCK) {
       setProduct({
         id: pid,
@@ -198,7 +195,6 @@ export default function ProductDetailPage() {
       await reloadGroupPurchases();
 
       try {
-        // ✅ api.ts에서 export가 없어도 TS 에러 안 나게 any로 꺼내쓰기
         const fn = (API as any).getProductById as ((id: number) => Promise<any>) | undefined;
         if (!fn) throw new Error("getProductById is not exported in api.ts");
 

@@ -24,6 +24,8 @@ function Header({ user, onLogout }: Props) {
 
   const sellerName = user.marketName ?? (user.nickName ? `${user.nickName} 마켓` : "판매자 마켓");
 
+  const goMyPage = () => navigate("/mypage");
+
   return (
     <header className="header">
       <div className="header-top">
@@ -52,9 +54,19 @@ function Header({ user, onLogout }: Props) {
 
         {isBuyer && (
           <div className="header-buyerBox">
-            <LuUser className="header-topIcon" />
-            <span className="header-buyerName">{user.nickName ?? "사용자"}</span>
-            <span className="header-buyerHonorific">님</span>
+            {/* ✅ 여기만 클릭하면 마이페이지로 */}
+            <button
+              type="button"
+              onClick={goMyPage}
+              className="header-topBtn"
+              style={{ display: "inline-flex", alignItems: "center", gap: "6px" }}
+              aria-label="마이페이지로 이동"
+            >
+              <LuUser className="header-topIcon" />
+              <span className="header-buyerName">{user.nickName ?? "사용자"}</span>
+              <span className="header-buyerHonorific">님</span>
+            </button>
+
             <span className="header-topDivider">/</span>
             <button type="button" className="header-topBtn header-logoutBtn" onClick={onLogout}>
               로그아웃

@@ -1,3 +1,4 @@
+// 판매자 가입 및 인증 페이지
 // src/pages/seller/SellerAuthPage.tsx
 import { useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -126,6 +127,7 @@ function SellerAuthPage() {
         return;
       }
 
+      // ✅ “성공했을 때만” 등록 완료 플래그
       localStorage.setItem(SELLER_BIZ_DONE_KEY, "true");
       localStorage.setItem(SELLER_BIZ_DATA_KEY, JSON.stringify(res.data.data));
 

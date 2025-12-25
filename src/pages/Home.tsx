@@ -1,4 +1,4 @@
-
+// 메인페이지
 // src/pages/Home.tsx
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";

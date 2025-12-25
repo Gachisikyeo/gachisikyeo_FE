@@ -52,7 +52,7 @@
 
 .mypage__col--right .mypage__field {
   width: 100%;
-  max-width: 320px;
+  max-width: 160px;
 }
 
 .mypage__label {
@@ -78,6 +78,7 @@
 .mypage__icon {
   font-size: 16px;
   color: #111827;
+  
 }
 
 .mypage__sectionTitle {
@@ -97,7 +98,6 @@
   margin-top: 22px;
 }
 
-/* ===== 리스트 ===== */
 .mypage__list {
   display: flex;
   flex-direction: column;
@@ -236,6 +236,17 @@
     padding-right: 0;
   }
 }
+
+.mypage__col--right .mypage__label {
+  text-align: right;
+  justify-self: end; 
+}
+
+.mypage__col--right .mypage__value {
+  justify-content: flex-end; 
+  text-align: right;
+}
+
 
 @media (max-width: 720px) {
   .mypage__userGrid {
