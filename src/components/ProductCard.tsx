@@ -12,21 +12,18 @@ export type Product = {
 type ProductCardProps = {
   product: Product;
   onClick?: () => void;
+  showMinOrderQty?: boolean; 
 };
 
 function formatWon(value: number) {
   return value.toLocaleString("ko-KR");
 }
 
-function ProductCard({ product, onClick }: ProductCardProps) {
+function ProductCard({ product, onClick, showMinOrderQty = false }: ProductCardProps) {
   return (
     <article className="product-card" onClick={onClick}>
       <div className="product-card__imageBox">
-        <img
-          src={product.imageUrl}
-          alt={product.title}
-          className="product-card__image"
-        />
+        <img src={product.imageUrl} alt={product.title} className="product-card__image" />
       </div>
 
       <div className="product-card__titleRow">
@@ -34,17 +31,18 @@ function ProductCard({ product, onClick }: ProductCardProps) {
         <span className="product-card__wishSpacer" aria-hidden />
       </div>
 
-      <div className="product-card__market">
-        구매가능 최소 수량 {product.minOrderQty}개
-      </div>
+      {/* 최근 공구에서만 보이게 */}
+      {showMinOrderQty && (
+        <div className="product-card__market">
+          구매가능 최소 수량 {product.minOrderQty}개
+        </div>
+      )}
 
       <div className="product-card__unit">
         단독 구매 시 {formatWon(product.singlePurchasePrice)}원
       </div>
 
-      <div className="product-card__price">
-        {formatWon(product.priceFrom)}원~
-      </div>
+      <div className="product-card__price">{formatWon(product.priceFrom)}원~</div>
     </article>
   );
 }

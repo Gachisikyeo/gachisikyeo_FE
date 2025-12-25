@@ -8,24 +8,21 @@
   --text-muted: #777;
 }
 
-/* layout */
 .app-layout {
   max-width: var(--layout-max-width);
   margin: 0 auto;
-  padding: 40 var(--layout-padding-x); /* 우측 상단 버튼들 위치 */
+  padding: 40px var(--layout-padding-x); 
 }
 
-/* base */
 body {
   margin: 0;
   font-family: "Pretendard", system-ui, -apple-system, BlinkMacSystemFont,
     "Apple SD Gothic Neo", "Noto Sans KR", sans-serif;
 }
 
-/* Header */
 .header {
   padding: 12px 0;
-  margin-bottom: 12px;
+  margin-bottom: -20px;
   border-bottom: none;
 }
 
@@ -37,7 +34,9 @@ body {
   display: flex;
   justify-content: flex-end;
   align-items: center;
-  min-height: 22px; 
+  min-height: 25px;
+  margin-bottom: -35px;
+  margin-right: 170px;
 }
 
 .header-topRight {
@@ -62,7 +61,6 @@ body {
   color: #999;
 }
 
-
 .header-buyerBox {
   display: flex;
   align-items: center;
@@ -83,19 +81,9 @@ body {
   border: none;
   background: none;
   cursor: pointer;
-  padding: 0;
   font-size: 12px;
   color: #333;
-}
 
-.header-sellerBtn {
-  border: none;
-  background: none;
-  cursor: pointer;
-  padding: 0;
-  font-size: 12px;
-  color: #333;
-  white-space: nowrap;
 }
 
 .header-inner {
@@ -125,7 +113,7 @@ body {
 
 .header-searchInput {
   width: 100%;
-  padding: 14px 0px 14px 14px; 
+  padding: 14px 0px 14px 14px;
   border-radius: 999px;
   border: 1px solid #ccc;
   font-size: 14px;
@@ -159,7 +147,7 @@ body {
 
 .header-buyerName {
   font-weight: 600;
-  color: #111;
+  color: #111;  
 }
 
 .header-buyerHonorific {
@@ -167,11 +155,10 @@ body {
   color: #111;
 }
 
-/* 판매자: 마켓이름만 굵게 */
+
 .header-sellerBtn {
   border: none;
   background: none;
-  cursor: pointer;
   padding: 0;
   font-size: 12px;
   color: #333;
@@ -180,6 +167,8 @@ body {
   display: inline-flex;
   align-items: center;
   gap: 8px;
+
+  cursor: default; 
 }
 
 .header-sellerName {
@@ -187,23 +176,31 @@ body {
   color: #111;
 }
 
+.header-logoutBtn {
+  margin-left: 0px;
+
+}
 
 
-/* Category Nav */
 .category-nav {
   border-bottom: 1px solid var(--border-color);
-  padding: 2px 20px 12px;
+  padding: 2px 0px 12px;
 }
 
 .category-nav__inner {
   display: flex;
   justify-content: center;
+  position: relative;
+
+  max-width: var(--layout-max-width);
+  margin: 0 auto;
+  padding: 0 var(--layout-padding-x);
 }
 
 .category-nav__row {
   display: flex;
   align-items: center;
-  gap: 56px; 
+  gap: 56px;
 }
 
 .category-nav__left {
@@ -212,7 +209,22 @@ body {
   align-items: center;
 }
 
-/* 구매자 위치 */
+.category-nav__right {
+  position: absolute;
+  right: 38px;
+  top: -40px; 
+  display: flex;
+  align-items: center;
+} 
+
+.category-nav__myPageBtn {
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  padding: 6px 8px;
+  font-size: 13px;
+}
+
 .category-nav__locationBtn {
   padding: 4px 14px;
   border-radius: 999px;
@@ -231,7 +243,7 @@ body {
   font-size: 11px;
 }
 
-/* 판매자 페이지 버튼 */
+
 .category-nav__sellerBtn {
   padding: 4px 14px;
   border-radius: 999px;
@@ -248,22 +260,37 @@ body {
   padding: 0;
   display: flex;
   align-items: center;
-  gap: 100px; 
+  gap: 120px;
   white-space: nowrap;
 }
 
 .category-nav__menuBtn {
-  border: none;
-  background: none;
-  cursor: pointer;
+  text-decoration: none;
+  color: #111;
+  position: relative;
   padding: 8px 0;
   font-weight: 400;
   font-size: 13.5px;
 }
 
-/* Ad Banner */
+.category-nav__menuBtn.is-active {
+  color: var(--primary-color);
+  font-weight: 600;
+}
+
+.category-nav__menuBtn.is-active::after {
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: -10px;
+  height: 2px;
+  background: var(--primary-color);
+  border-radius: 2px;
+}
+
 .ad-banner {
-  margin: 36px 0 24px;
+  margin: -40px 0 -20px;
 }
 
 .ad-banner__imageWrapper {
@@ -277,7 +304,7 @@ body {
   object-fit: cover;
 }
 
-/* Product Section / Card */
+
 .product-section {
   margin: 40px auto 0;
   max-width: 1050px;
@@ -307,7 +334,8 @@ body {
 .product-grid {
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-  gap: 16px;
+  column-gap: 16px;
+  row-gap:50px; /* 민정언니한테물어보기 */
   align-items: stretch;
 }
 
@@ -371,4 +399,17 @@ body {
   font-size: 14px;
   font-weight: 400;
   color: var(--primary-color);
+}
+
+/* 메뉴 페이지들에서 더보기 버튼 ㄴ */
+.page-list .product-section__moreBtn {
+  display: none;
+}
+
+.page-list .product-section {
+  margin-top: 0px; 
+}
+
+.page-list.app-layout {
+  padding-top: 1px;
 }

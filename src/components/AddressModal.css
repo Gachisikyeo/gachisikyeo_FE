@@ -1,7 +1,7 @@
 .addrOverlay {
   position: fixed;
   inset: 0;
-  background: rgba(0,0,0,0.35);
+  background: rgba(0, 0, 0, 0.35);
   display: flex;
   justify-content: center;
   align-items: center;
@@ -10,12 +10,12 @@
 }
 
 .addrModal {
-  width: 720px;
+  width: 640px;
   max-width: calc(100vw - 40px);
   background: #fff;
   border-radius: 14px;
   overflow: hidden;
-  box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
 }
 
 .addrHeader {
@@ -26,12 +26,21 @@
   border-bottom: 1px solid #eee;
 }
 
+.addrHeaderCenter {
+  justify-content: center;
+  position: relative;
+}
+
 .addrTitle {
   font-size: 18px;
-  font-weight: 800;
+  font-weight: 500;
 }
 
 .addrClose {
+  position: absolute;
+  right: 14px;
+  top: 50%;
+  transform: translateY(-50%);
   border: 0;
   background: transparent;
   font-size: 26px;
@@ -39,66 +48,73 @@
   line-height: 1;
 }
 
-.addrBody {
-  padding: 18px 20px;
-  display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
-  gap: 14px;
+.addrModalChips .addrBodyChips {
+  padding: 22px 28px 14px;
 }
 
-.addrRow {
+.addrSection {
+  margin-bottom: 22px;
+}
+
+.addrSectionTitle {
+  font-size: 17px;
+  font-weight: 400;
+  color: #111;
+  margin-bottom: 10px;
+}
+
+.addrChipGrid {
   display: flex;
-  flex-direction: column;
-  gap: 8px;
+  flex-wrap: wrap;
+  gap: 10px 12px;
 }
 
-.addrLabel {
+.addrChip {
+  border: 1px solid #cfcfcf;
+  background: #fff;
+  color: #111;
+  border-radius: 999px;
+  padding: 10px 16px;
   font-size: 13px;
-  font-weight: 700;
-  color: #333;
+  font-weight: 350;
+  cursor: pointer;
+  line-height: 1;
 }
 
-.addrSelect {
-  height: 44px;
-  border: 1px solid #d9d9d9;
-  border-radius: 10px;
-  padding: 0 12px;
-  font-size: 14px;
-  outline: none;
+.addrChip.isActive {
+  border-color: #2d9dff;
+  background: #eaf3ff;
+  color: #2d9dff;
+  font-weight: 500;
 }
 
-.addrSelect:focus {
-  border-color: #2f86ff;
+.addrSection.isDisabled {
+  opacity: 0.45;
 }
 
-.addrFooter {
-  padding: 16px 20px 20px;
+.addrSection.isDisabled .addrChip {
+  cursor: not-allowed;
+}
+
+.addrFooterChips {
+  padding: 8px 28px 26px;
   display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-  border-top: 1px solid #eee;
+  justify-content: center;
 }
 
-.addrBtn {
-  height: 44px;
-  padding: 0 18px;
-  border-radius: 10px;
+.addrPrimary {
+  width: 70%;
+  height: 48px;
   border: 0;
-  font-weight: 800;
+  border-radius: 10px;
+  background: #2d9dff;
+  color: #fff;
+  font-weight: 500;
+  font-size: 15px;
   cursor: pointer;
 }
 
-.addrBtn.cancel {
-  background: #f2f2f2;
-  color: #333;
-}
-
-.addrBtn.confirm {
-  background: #2f86ff;
-  color: #fff;
-}
-
-.addrBtn.confirm.isDisabled {
+.addrPrimary.isDisabled {
   background: #d9d9d9 !important;
   color: #888 !important;
   cursor: not-allowed;

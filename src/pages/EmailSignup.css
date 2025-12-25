@@ -29,8 +29,8 @@
 }
 
 .signupTitle {
-  font-size: 20px;
-  font-weight: 700;
+  font-size: 24px;
+  font-weight: 600;
   margin: 0 0 22px;
   color: #111;
 }
@@ -39,33 +39,32 @@
   width: 100%;
   display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: center;
+  gap: 40px;
   margin-bottom: 14px;
 }
 
-.userTypeBtn {
-  height: 48px;
-  padding: 0 58px;
-  border-radius: 10px;
-  border: 1px solid #d9d9d9;
-  background: #fff;
-  font-size: 18px;
-  font-weight: 600;
-  cursor: pointer;
-  color: #333;
+.userTypeOption {
+  display: flex;
+  align-items: center;
+  gap: 25px;
+  font-size: 22px;
+  font-weight: 300;
+  color: #111;
 }
 
-.userTypeBtn.active {
-  background: #2D9DFF;
-  border-color: #2D9DFF;
-  color: #fff;
+.userTypeOption input {
+  transform: scale(1.7);  
+  transform-origin: left center;
+  accent-color: #2D9DFF;
+
 }
 
 .userTypeSuffix {
-  font-size: 30px;
+  font-size: 20px !important;
   font-weight: 400;
-  color: #333;
-  margin-left: 2px;
+  color: #111;
+  margin-left: -20px;
 }
 
 .signupForm {
@@ -111,7 +110,6 @@
   color: #999;
 }
 
-
 .signupError {
   width: 100%;
   margin: -6px 0 0;
@@ -125,8 +123,8 @@
 }
 
 .termsTitle {
-  font-size: 14px;
-  font-weight: 600;
+  font-size: 18px;
+  font-weight: 400;
   margin-bottom: 10px;
   color: #111;
 }
@@ -142,19 +140,20 @@
   display: flex;
   align-items: center;
   gap: 8px;
-  font-size: 13px;
+  font-size: 14px;
   color: #555;
 }
 
 .termsViewBtn {
   border: 0;
   background: transparent;
-  font-weight: 500;
-  font-size: 13px;
+  font-weight: 200;
+  font-size: 14px;
   cursor: pointer;
   color: #111;
+  text-decoration: underline;
+  text-underline-offset: 4px;
 }
-
 
 .primaryBtn {
   margin-top: 14px;
@@ -164,7 +163,7 @@
   border-radius: 10px;
   background: #2D9DFF;
   color: #fff;
-  font-weight: 700;
+  font-weight: 500;
   font-size: 15px;
   cursor: pointer;
   box-sizing: border-box;
@@ -175,3 +174,4 @@
   color: #888 !important;
   cursor: not-allowed;
 }
+

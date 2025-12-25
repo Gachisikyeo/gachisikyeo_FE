@@ -20,53 +20,56 @@
 }
 
 .signupLogo {
-  margin-bottom: 0px;
+  margin-bottom: 18px; /* 이메일처럼 */
 }
 .signupLogo img {
-  width: 220px;
+  width: 220px; 
   height: auto;
   display: block;
 }
 
 .signupTitle {
-  font-size: 20px;
-  font-weight: 700;
-  margin: 0 0 40px;
+  font-size: 24px;   
+  font-weight: 600;  
+  margin: 0 0 22px;  
   color: #111;
-  text-align: center;
 }
 
 .userTypeRow {
   width: 100%;
   display: flex;
   align-items: center;
-  gap: 10px;
+  justify-content: center;
+  gap: 40px;
   margin-bottom: 14px;
 }
 
-.userTypeBtn {
-  height: 48px;
-  padding: 0 58px;
-  border-radius: 10px;
-  border: 1px solid #d9d9d9;
-  background: #fff;
-  font-size: 18px;
-  font-weight: 600;
-  cursor: pointer;
-  color: #333;
+.userTypeOption {
+  display: flex;
+  align-items: center;
+  gap: 18px;
+  font-size: 22px;
+  font-weight: 300;
+  color: #111;
+  white-space: nowrap;
+  word-break: keep-all;
+  flex: 0 0 auto;
 }
 
-.userTypeBtn.active {
-  background: #2d9dff;
-  border-color: #2d9dff;
-  color: #fff;
+.userTypeOption input {
+  transform: scale(1.7);
+  transform-origin: left center;
+  accent-color: #2D9DFF;
 }
 
 .userTypeSuffix {
-  font-size: 30px;
+  font-size: 20px !important;
   font-weight: 400;
-  color: #333;
-  margin-left: 2px;
+  color: #111;
+  margin-left: -20px;
+  white-space: nowrap;
+  word-break: keep-all;
+  flex: 0 0 auto;
 }
 
 .signupForm {
@@ -75,7 +78,6 @@
   flex-direction: column;
   gap: 14px;
 }
-
 
 .inputRow {
   position: relative;
@@ -103,9 +105,8 @@
 }
 
 .inputRow input:focus {
-  border-color: #2d9dff;
+  border-color: #2D9DFF;
 }
-
 
 .signupError {
   width: 100%;
@@ -120,10 +121,10 @@
   height: 50px;
   border: 0;
   border-radius: 10px;
-  background: #2d9dff;
+  background: #2D9DFF;
   color: #fff;
-  font-weight: 700;
-  font-size: 15px;
+  font-weight: 500;
+  font-size: 15px; 
   cursor: pointer;
   box-sizing: border-box;
 }

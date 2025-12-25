@@ -1,0 +1,110 @@
+/* src/pages/PaymentSuccessPage.css */
+
+.payment-success {
+  display: flex;
+  justify-content: center;
+  padding: 56px 0 80px;
+}
+
+.payment-success__panel {
+  width: 100%;
+  max-width: 850px;
+  background: #f3f4f6;
+  border-radius: 8px;
+  padding: 80px 24px 70px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.successLogo img {
+  width: 200px;
+  max-width: 75vw;
+  height: auto;
+  display: block;
+  margin-bottom: 30px;
+}
+
+/* 완료 문구 */
+.payment-success__message {
+  font-size: 22px;
+  font-weight: 500;
+  color: #111827;
+  margin-bottom: 34px;
+}
+
+.payment-success__infoCard {
+  width: 100%;
+  max-width: 600px;
+  background: #fff;
+  border-radius: 8px;
+  padding: 44px 48px;
+  border: 1px solid #eef0f3;
+}
+
+.payment-success__row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 18px 0;
+}
+
+.payment-success__label {
+  font-size: 18px;
+  color: #9ca3af;
+  font-weight: 500;
+}
+
+.payment-success__value {
+  font-size: 17px;
+  color: #111827;
+  font-weight: 400;
+  text-align: right;
+  word-break: break-word;
+}
+
+.payment-success__buttons {
+  margin-top: 34px;
+  display: flex;
+  gap:  60px;
+}
+
+.payment-success__btn {
+  width: 318px;
+  height: 46px;
+  background: #ffffff;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  font-weight: 500;
+  font-size: 14px;
+  color: #111827;
+  cursor: pointer;
+}
+
+.payment-success__btn:hover {
+  background: #f9fafb;
+}
+
+.payment-success__btn:active {
+  transform: translateY(1px);
+}
+
+@media (max-width: 720px) {
+  .payment-success__panel {
+    padding: 60px 16px 50px;
+  }
+
+  .payment-success__infoCard {
+    padding: 28px 22px;
+  }
+
+  .payment-success__buttons {
+    gap: 12px;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .payment-success__btn {
+    width: 160px;
+  }
+}

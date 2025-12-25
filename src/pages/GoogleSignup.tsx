@@ -1,13 +1,34 @@
-import { useMemo, useRef, useState } from "react";
+// src/pages/GoogleSignup.tsx
+import { useEffect, useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiUser } from "react-icons/fi";
 import { HiOutlineLocationMarker } from "react-icons/hi";
+
+import Logo from "../assets/logo.png";
 import AddressModal from "../components/AddressModal";
+import { oauth2Signup } from "../api/api";
+import {
+  clearOAuth2SignupToken,
+  getOAuth2SignupToken,
+  saveAuthUser,
+  saveTokens,
+  setOAuth2SignupToken,
+} from "../auth/authStorage";
 
 import "./GoogleSignup.css";
-import Logo from "../assets/logo.png";
 
 type UserType = "SELLER" | "BUYER" | null;
+
+function getParamFromSearchOrHash(key: string) {
+  const searchParams = new URLSearchParams(window.location.search);
+  const fromSearch = searchParams.get(key);
+
+  const hash = window.location.hash?.replace(/^#/, "") ?? "";
+  const hashParams = new URLSearchParams(hash);
+  const fromHash = hashParams.get(key);
+
+  return fromSearch ?? fromHash;
+}
 
 export default function GoogleSignup() {
   const navigate = useNavigate();
@@ -15,11 +36,18 @@ export default function GoogleSignup() {
 
   const [userType, setUserType] = useState<UserType>(null);
   const [nickName, setNickName] = useState("");
+
   const [addressLabel, setAddressLabel] = useState("");
   const [lawDongId, setLawDongId] = useState<number | null>(null);
-
   const [isAddrOpen, setIsAddrOpen] = useState(false);
+
   const [errorMsg, setErrorMsg] = useState("");
+
+  // ✅ URL로 oauth2SignupToken이 들어오면 세션에 저장 (query든 hash든 다 처리)
+  useEffect(() => {
+    const token = getParamFromSearchOrHash("oauth2SignupToken");
+    if (token) setOAuth2SignupToken(token);
+  }, []);
 
   const canSubmit = useMemo(() => {
     return userType !== null && nickName.trim().length > 0 && lawDongId !== null;
@@ -32,24 +60,54 @@ export default function GoogleSignup() {
     setErrorMsg("");
   };
 
-  const trySubmit = () => {
+  const trySubmit = async () => {
     showMissingMsg();
     if (!canSubmit) return;
 
     const ok = formRef.current?.reportValidity?.() ?? true;
     if (!ok) return;
 
-    setErrorMsg("");
+    const oauth2SignupToken = getOAuth2SignupToken();
+    if (!oauth2SignupToken) {
+      setErrorMsg("oauth2SignupToken이 없어요. 구글 로그인부터 다시 해주세요.");
+      return;
+    }
 
-    
-    localStorage.setItem("signup_nickName", nickName);
-    navigate("/signup/success", { state: { nickName } });
+    try {
+      const res = await oauth2Signup({
+        oauth2SignupToken,
+        nickName: nickName.trim(),
+        userType: userType!,
+        lawDongId: lawDongId!,
+      });
 
-  };
+      if (!res.data?.success) {
+        setErrorMsg(res.data?.message || "구글 회원가입에 실패했습니다.");
+        return;
+      }
 
-  const onSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    trySubmit();
+      const data = res.data.data;
+
+      saveTokens(data.accessToken, data.refreshToken);
+
+      saveAuthUser({
+        isLoggedIn: true,
+        userType: data.userType,
+        id: data.id,
+        email: data.email,
+        name: data.name,
+        nickName: data.nickName,
+        role: data.role,
+        authProvider: data.authProvider,
+        lawDong: data.lawDong,
+      });
+
+      clearOAuth2SignupToken();
+      navigate("/");
+    } catch (e: any) {
+      console.error(e);
+      setErrorMsg(e?.response?.data?.message || "구글 회원가입에 실패했습니다.");
+    }
   };
 
   return (
@@ -59,39 +117,44 @@ export default function GoogleSignup() {
           <img src={Logo} alt="같이시켜 로고" />
         </div>
 
-        <h2 className="signupTitle">구글로 가입하기</h2>
+        <h2 className="signupTitle">구글 회원가입</h2>
 
         <div className="userTypeRow">
-          <button
-            type="button"
-            className={`userTypeBtn ${userType === "SELLER" ? "active" : ""}`}
-            onClick={() => {
-              setUserType("SELLER");
-              setErrorMsg("");
-            }}
-          >
-            판매자
-          </button>
-          <button
-            type="button"
-            className={`userTypeBtn ${userType === "BUYER" ? "active" : ""}`}
-            onClick={() => {
-              setUserType("BUYER");
-              setErrorMsg("");
-            }}
-          >
-            구매자
-          </button>
-          <span className="userTypeSuffix">예요.</span>
+          <label className="userTypeOption">
+            <input
+              type="checkbox"
+              checked={userType === "BUYER"}
+              onChange={(e) => {
+                setUserType(e.target.checked ? "BUYER" : null);
+                setErrorMsg("");
+              }}
+            />
+            <span>일반 구매자</span>
+          </label>
+
+          <label className="userTypeOption">
+            <input
+              type="checkbox"
+              checked={userType === "SELLER"}
+              onChange={(e) => {
+                setUserType(e.target.checked ? "SELLER" : null);
+                setErrorMsg("");
+              }}
+            />
+            <span>판매자</span>
+          </label>
+
+          <span className="userTypeSuffix">로 가입할게요.</span>
         </div>
 
-        <form ref={formRef} className="signupForm" onSubmit={onSubmit}>
+        <form ref={formRef} className="signupForm" onSubmit={(e) => e.preventDefault()}>
           <div className="inputRow">
             <FiUser className="inputIcon" />
             <input
               type="text"
               placeholder="닉네임"
               value={nickName}
+              required
               onChange={(e) => {
                 setNickName(e.target.value);
                 setErrorMsg("");
@@ -129,7 +192,7 @@ export default function GoogleSignup() {
             aria-disabled={!canSubmit}
             onClick={trySubmit}
           >
-            가입하기
+            가입 완료
           </button>
         </form>
       </div>

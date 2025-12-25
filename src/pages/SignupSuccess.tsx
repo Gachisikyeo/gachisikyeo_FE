@@ -1,7 +1,9 @@
+// 회원가입 성공 페이지
+// src/pages/SignupSuccess.tsx
 import { useMemo } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import "./SignupSuccess.css";
-import Logo from "../assets/logo.png";
+import Logo from "../assets/logo2.png";
 
 type LocationState = {
   nickName?: string;

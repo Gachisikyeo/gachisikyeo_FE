@@ -1,0 +1,267 @@
+:root {
+  --mypage-width: 880px;}
+
+.mypageWrap {
+  width: 100%;
+  max-width: var(--mypage-width);
+  margin: 0 auto;
+  padding: 24px 0 60px;
+}
+
+.mypageWrap > * {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.mypage__userPanel {
+  background: #f3f4f6;
+  border-radius: 14px;
+  padding: 18px 20px;
+  margin: 0 auto 22px;
+}
+
+.mypage__userGrid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 24px;
+}
+
+.mypage__col {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mypage__col--right {
+  align-items: flex-end;
+}
+
+.mypage__col--leftShift {
+  padding-left: 20px;
+}
+
+.mypage__col--rightShift {
+  padding-left: 250px;
+}
+
+.mypage__field {
+  display: grid;
+  grid-template-columns: 56px 1fr;
+  align-items: center;
+  gap: 10px;
+  min-height: 28px;
+}
+
+.mypage__col--right .mypage__field {
+  width: 100%;
+  max-width: 320px;
+}
+
+.mypage__label {
+  font-size: 13px;
+  font-weight: 700;
+  color: #6b7280;
+  white-space: nowrap;
+}
+
+.mypage__value {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 14px;
+  font-weight: 700;
+  color: #111827;
+  min-width: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.mypage__icon {
+  font-size: 16px;
+  color: #111827;
+}
+
+.mypage__sectionTitle {
+  background: #bfe0ff;
+  color: #111827;
+  font-weight: 600;
+  font-size: 16px;
+  border-radius: 8px;
+  padding: 12px 16px;
+  margin: 0 auto 14px;
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+}
+
+.mypage__sectionTitle--mt {
+  margin-top: 22px;
+  
+}
+
+/* ===== 리스트 ===== */
+.mypage__list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.mypage__empty {
+  background: #f3f4f6;
+  border-radius: 12px;
+  padding: 18px;
+  color: #6b7280;
+  font-weight: 700;
+}
+
+.mypage__orderCard {
+  width: 100%;
+  display: flex;
+  gap: 18px;
+  background: #f3f4f6;
+  border-radius: 16px;
+  padding: 18px;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  min-height: 190px;
+  align-items: center;
+}
+
+.mypage__thumb {
+  width: 150px;
+  height: 150px;
+  border-radius: 12px;
+  background: #e9b6b6; 
+  flex: 0 0 150px;
+  overflow: hidden;
+}
+
+.mypage__thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.mypage__orderInfo {
+  flex: 1;
+  min-width: 0;
+}
+
+.mypage__productName {
+  font-size: var(--product-title-size);
+  font-weight: 500;
+  font-size: 17px;
+  color: #111827;
+  margin-bottom: 10px;
+}
+
+.mypage__payAmount {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-bottom: 16px;
+}
+
+.mypage__payLabel {
+  font-size: 13px;
+  font-weight: 700;
+  color: #6b7280;
+}
+
+.mypage__payValue {
+  font-size: 18px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.mypage__metaRow {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 18px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #111827;
+  margin-bottom: 14px;
+}
+
+.mypage__line {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  color: #111827;
+  margin-top: 6px;
+}
+
+.mypage__miniIcon {
+  font-size: 16px;
+  color: #111827;
+}
+
+.mypage__moreBtn {
+  width: 100%;
+  margin-top: 6px;
+  background: #f3f4f6;
+  border: none;
+  border-radius: 16px;
+  padding: 12px 0;
+  font-weight: 900;
+  color: #111827;
+  cursor: pointer;
+  min-height: 44px;
+}
+
+.mypage__chev {
+  display: inline-block;
+  margin-left: 6px;
+  transition: transform 0.15s ease;
+}
+
+.mypage__chev.is-up {
+  transform: rotate(180deg);
+}
+
+@media (max-width: 920px) {
+  .mypageWrap {
+    max-width: 100%;
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+  .mypage__col--leftShift {
+    padding-left: 0;
+  }
+  .mypage__col--rightShift {
+    padding-right: 0;
+  }
+}
+
+@media (max-width: 720px) {
+  .mypage__userGrid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .mypage__col--right {
+    align-items: flex-start;
+  }
+
+  .mypage__col--right .mypage__field {
+    max-width: 100%;
+  }
+
+  .mypage__orderCard {
+    flex-direction: column;
+    align-items: stretch;
+    min-height: auto;
+  }
+
+  .mypage__thumb {
+    width: 100%;
+    height: 160px;
+    flex: none;
+  }
+}

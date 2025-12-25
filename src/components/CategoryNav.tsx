@@ -1,25 +1,29 @@
-// 위치 or 판매자페이지 버튼 + 카테고리 메뉴 탭
+// 위치 or 판매자페이지 버튼 + 메뉴 + 마이페이지 버튼
 // src/components/CategoryNav.tsx
 import { FaMapMarkerAlt } from "react-icons/fa";
-import { useNavigate } from "react-router-dom";
-import { USER_ROLE, type User } from "../constants/userRole";
+import { NavLink, useNavigate } from "react-router-dom";
+import type { AuthUser } from "../auth/authStorage";
 
 type CategoryNavProps = {
-  user: User;
+  user: AuthUser;
 };
 
-const menus = ["인기 상품", "최근 등록된 공구", "진행 중인 공구", "식품", "비식품", "의류"];
+const menuItems = [
+  { label: "인기 상품", to: "/popular" },
+  { label: "최근 등록된 공구", to: "/recent" },
+  { label: "식품", to: "/category/food" },
+  { label: "비식품", to: "/category/non-food" },
+  { label: "의류", to: "/category/clothing" },
+] as const;
 
 function CategoryNav({ user }: CategoryNavProps) {
   const navigate = useNavigate();
 
-  const handleMenuClick = (menu: string) => {
-    console.log(`${menu} 메뉴 클릭 (나중에 페이지 이동)`);
-  };
+  const isGuest = !user.isLoggedIn || user.userType === "GUEST";
+  const isBuyer = user.isLoggedIn && user.userType === "BUYER";
+  const isSeller = user.isLoggedIn && user.userType === "SELLER";
 
-  const isGuest = !user.isLoggedIn || user.role === USER_ROLE.GUEST;
-  const isBuyer = user.isLoggedIn && user.role === USER_ROLE.BUYER;
-  const isSeller = user.isLoggedIn && user.role === USER_ROLE.SELLER;
+  const addressLabel = user.lawDong?.dong ?? "위치 미설정";
 
   return (
     <nav className="category-nav">
@@ -29,7 +33,7 @@ function CategoryNav({ user }: CategoryNavProps) {
             {!isGuest && isBuyer && (
               <button type="button" className="category-nav__locationBtn">
                 <FaMapMarkerAlt />
-                {user.location ?? "위치 미설정"}
+                {addressLabel}
               </button>
             )}
 
@@ -41,14 +45,25 @@ function CategoryNav({ user }: CategoryNavProps) {
           </div>
 
           <ul className="category-nav__menus">
-            {menus.map((menu) => (
-              <li key={menu}>
-                <button type="button" onClick={() => handleMenuClick(menu)} className="category-nav__menuBtn">
-                  {menu}
-                </button>
+            {menuItems.map((item) => (
+              <li key={item.to}>
+                <NavLink
+                  to={item.to}
+                  className={({ isActive }) => `category-nav__menuBtn ${isActive ? "is-active" : ""}`}
+                >
+                  {item.label}
+                </NavLink>
               </li>
             ))}
           </ul>
+
+          {!isGuest && isBuyer && (
+            <div className="category-nav__right">
+              <button type="button" className="category-nav__myPageBtn" onClick={() => navigate("/mypage")}>
+                마이페이지
+              </button>
+            </div>
+          )}
         </div>
       </div>
     </nav>

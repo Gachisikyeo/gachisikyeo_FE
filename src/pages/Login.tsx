@@ -1,3 +1,5 @@
+
+
 // src/pages/Login.tsx
 import { useMemo, useRef, useState } from "react";
 import { useNavigate } from "react-router-dom";
@@ -5,39 +7,82 @@ import { FiMail, FiLock } from "react-icons/fi";
 import { FcGoogle } from "react-icons/fc";
 import "./Login.css";
 import Logo from "../assets/logo.png";
+import { getGoogleAuthorizationUrl, login } from "../api/api";
+import {
+  clearOAuth2SignupToken,
+  saveAuthUser,
+  saveTokens,
+  setOAuth2SignupToken,
+} from "../auth/authStorage";
 
+type OAuthCallbackResponse = {
+  success: boolean;
+  message?: string;
+  data?: any;
+  status?: number;
+};
 
 export default function Login() {
   const navigate = useNavigate();
   const formRef = useRef<HTMLFormElement | null>(null);
 
   const [email, setEmail] = useState("");
-  const [password, setpassword] = useState("");
+  const [password, setPassword] = useState("");
   const [errorMsg, setErrorMsg] = useState("");
+  const [isGoogleLoading, setIsGoogleLoading] = useState(false);
 
   const isEmailFilled = email.trim().length > 0;
-  const ispasswordFilled = password.trim().length > 0;
-
-  const canLogin = useMemo(() => isEmailFilled && ispasswordFilled, [isEmailFilled, ispasswordFilled]);
+  const isPasswordFilled = password.trim().length > 0;
+  const canLogin = useMemo(
+    () => isEmailFilled && isPasswordFilled,
+    [isEmailFilled, isPasswordFilled]
+  );
 
   const showMissingMsg = () => {
-    if (!isEmailFilled && !ispasswordFilled) setErrorMsg("이메일과 비밀번호를 입력하세요.");
+    if (!isEmailFilled && !isPasswordFilled) setErrorMsg("이메일과 비밀번호를 입력하세요.");
     else if (!isEmailFilled) setErrorMsg("이메일을 입력하세요.");
-    else if (!ispasswordFilled) setErrorMsg("비밀번호를 입력하세요.");
+    else if (!isPasswordFilled) setErrorMsg("비밀번호를 입력하세요.");
     else setErrorMsg("");
   };
 
-  const tryLogin = () => {
-    // 빈칸이면 빨간 에러 문구
+  const tryLogin = async () => {
     showMissingMsg();
     if (!canLogin) return;
 
-    // 메일 형식 틀리면 경고
     const ok = formRef.current?.reportValidity?.() ?? true;
     if (!ok) return;
 
     setErrorMsg("");
-    navigate("/");
+
+    try {
+      const response = await login({ email, password });
+
+      if (!response.data.success) {
+        setErrorMsg(response.data.message || "로그인에 실패했습니다.");
+        return;
+      }
+
+      const data = response.data.data;
+
+      saveTokens(data.accessToken, data.refreshToken);
+
+      saveAuthUser({
+        isLoggedIn: true,
+        userType: data.userType,
+        id: data.id,
+        email: data.email,
+        name: data.name,
+        nickName: data.nickName,
+        role: data.role,
+        authProvider: data.authProvider,
+        lawDong: data.lawDong,
+      });
+
+      navigate("/");
+    } catch (error) {
+      console.error(error);
+      setErrorMsg("로그인에 실패했습니다.");
+    }
   };
 
   const onSubmit = (e: React.FormEvent) => {
@@ -46,20 +91,27 @@ export default function Login() {
   };
 
   const onClickEmailSignup = () => {
-  navigate("/signup/email");
+    navigate("/signup/email");
   };
 
   const onClickGoogleLogin = () => {
-  navigate("/signup/google");
-  };
+  // ✅ 무조건 localhost 경로로만 이동 (vite proxy가 /oauth2를 백엔드로 넘겨줌)
+  window.location.href = "/oauth2/authorization/google";
+};
+
+
+
 
   return (
     <div className="loginPage">
       <div className="loginWrap">
         <div className="loginLogo">
-          {Logo ? <img src={Logo} alt="같이시켜 로고" /> : 
-          <div className="loginLogo__placeholder">같이시켜</div>}
-          </div>
+          {Logo ? (
+            <img src={Logo} alt="같이시켜 로고" />
+          ) : (
+            <div className="loginLogo__placeholder">같이시켜</div>
+          )}
+        </div>
 
         <h2 className="loginTitle">로그인</h2>
 
@@ -85,7 +137,7 @@ export default function Login() {
               placeholder="비밀번호 입력"
               value={password}
               onChange={(e) => {
-                setpassword(e.target.value);
+                setPassword(e.target.value);
                 setErrorMsg("");
               }}
               autoComplete="current-password"
@@ -96,7 +148,11 @@ export default function Login() {
 
           <div className="helperRow">
             <span>이메일로 가입하실 건가요?</span>
-            <button type="button" className="emailSignupBtn" onClick={onClickEmailSignup}>
+            <button
+              type="button"
+              className="emailSignupBtn"
+              onClick={onClickEmailSignup}
+            >
               이메일 회원가입
             </button>
           </div>
@@ -110,14 +166,19 @@ export default function Login() {
             로그인
           </button>
         </form>
-        
 
         <div className="snsArea">
           <div className="snsDivider">SNS 계정 간편 로그인</div>
 
-          <button type="button" className="googleBtn" onClick={onClickGoogleLogin}>
+          <button
+            type="button"
+            className="googleBtn"
+            onClick={onClickGoogleLogin}
+            disabled={isGoogleLoading}
+            aria-disabled={isGoogleLoading}
+          >
             <FcGoogle className="googleIcon" />
-            구글 계정으로 로그인
+            {isGoogleLoading ? "구글 로그인 진행중..." : "구글 계정으로 로그인(TEST123)"}
           </button>
         </div>
       </div>

@@ -1,7 +1,7 @@
+
 import { useEffect, useMemo, useState } from "react";
 import "./AddressModal.css";
-
-type DongItem = { id: number; dong: string };
+import { getDongList, getSidoList, getSigunguList, resolveLawDong } from "../api/api";
 
 type Props = {
   isOpen: boolean;
@@ -11,7 +11,7 @@ type Props = {
     sigungu: string;
     dong: string;
     lawDongId: number;
-    label: string; 
+    label: string;
   }) => void;
 };
 
@@ -20,177 +20,237 @@ export default function AddressModal({ isOpen, onClose, onConfirm }: Props) {
 
   const [sidoList, setSidoList] = useState<string[]>([]);
   const [sigunguList, setSigunguList] = useState<string[]>([]);
-  const [dongList, setDongList] = useState<DongItem[]>([]);
+  const [dongList, setDongList] = useState<string[]>([]);
 
   const [sido, setSido] = useState("");
   const [sigungu, setSigungu] = useState("");
-  const [dongId, setDongId] = useState<number | null>(null);
+  const [dong, setDong] = useState("");
 
-  const selectedDong = useMemo(() => dongList.find((d) => d.id === dongId), [dongList, dongId]);
+  const canConfirm = useMemo(() => Boolean(sido && sigungu && dong), [sido, sigungu, dong]);
 
-  const canConfirm = !!(sido && sigungu && selectedDong);
-
+  // ✅ ESC로 닫기 + 모달 열릴 때 스크롤 잠금(원치 않으면 지워도 됨)
   useEffect(() => {
     if (!isOpen) return;
 
+    const onKeyDown = (e: KeyboardEvent) => {
+      if (e.key === "Escape") onClose();
+    };
+
+    document.addEventListener("keydown", onKeyDown);
+    const prevOverflow = document.body.style.overflow;
+    document.body.style.overflow = "hidden";
+
+    return () => {
+      document.removeEventListener("keydown", onKeyDown);
+      document.body.style.overflow = prevOverflow;
+    };
+  }, [isOpen, onClose]);
+
+  // 모달 열리면 시/도 불러오기
+  useEffect(() => {
+    if (!isOpen) return;
+
+    let alive = true;
+
+    // 초기화
     setSido("");
     setSigungu("");
-    setDongId(null);
+    setDong("");
+    setSigunguList([]);
+    setDongList([]);
+    setSidoList([]);
+
+    (async () => {
+      try {
+        setLoading(true);
+        const res = await getSidoList();
+        if (!alive) return;
+        setSidoList(res.data.data ?? []);
+      } catch (e) {
+        console.error(e);
+        if (!alive) return;
+        alert("지역 목록을 불러오지 못했어요");
+      } finally {
+        if (alive) setLoading(false);
+      }
+    })();
+
+    return () => {
+      alive = false;
+    };
+  }, [isOpen]);
+
+  // 시/도 선택 > 시군구 불러오기
+  useEffect(() => {
+    if (!isOpen) return;
+    if (!sido) return;
+
+    let alive = true;
+
+    setSigungu("");
+    setDong("");
     setSigunguList([]);
     setDongList([]);
 
     (async () => {
       try {
         setLoading(true);
-        const res = await fetch("/law-dong/sido");
-        const data = await res.json();
-        setSidoList(data ?? []);
+        const res = await getSigunguList(sido);
+        if (!alive) return;
+        setSigunguList(res.data.data ?? []);
       } catch (e) {
         console.error(e);
-        alert("아직연동을못함샤갈이거어ㅓ덯게");
+        if (!alive) return;
+        alert("시/군/구 목록을 불러오지 못했어요");
       } finally {
-        setLoading(false);
+        if (alive) setLoading(false);
       }
     })();
-  }, [isOpen]);
 
-  // 시/도 선택 시 → 구 목록 불러오기
+    return () => {
+      alive = false;
+    };
+  }, [isOpen, sido]);
+
+  // 시군구 선택 > 동 불러오기
   useEffect(() => {
-    if (!sido) return;
+    if (!isOpen) return;
+    if (!sido || !sigungu) return;
 
-    setSigungu("");
-    setDongId(null);
+    let alive = true;
+
+    setDong("");
     setDongList([]);
 
     (async () => {
       try {
         setLoading(true);
-        const res = await fetch(`/law-dong/sigungu?sido=${encodeURIComponent(sido)}`);
-        const data = await res.json();
-        setSigunguList(data ?? []);
+        const res = await getDongList(sido, sigungu);
+        if (!alive) return;
+        setDongList(res.data.data ?? []);
       } catch (e) {
         console.error(e);
-        alert("아직연동을못함샤갈이거어ㅓ덯게");
+        if (!alive) return;
+        alert("동 목록을 불러오지 못했어요");
       } finally {
-        setLoading(false);
+        if (alive) setLoading(false);
       }
     })();
-  }, [sido]);
 
-  // 구 선택 시 → 동 목록 불러오기 
-  useEffect(() => {
-    if (!sido || !sigungu) return;
+    return () => {
+      alive = false;
+    };
+  }, [isOpen, sido, sigungu]);
 
-    setDongId(null);
+  const handleConfirm = async () => {
+    if (!canConfirm || loading) return;
 
-    (async () => {
-      try {
-        setLoading(true);
-        const res = await fetch(
-          `/law-dong/dong?sido=${encodeURIComponent(sido)}&sigungu=${encodeURIComponent(sigungu)}`
-        );
-        const data = await res.json();
+    try {
+      setLoading(true);
 
-        setDongList(data ?? []);
-      } catch (e) {
-        console.error(e);
-        alert("아직연동을못함샤갈이거어ㅓ덯게해");
-      } finally {
-        setLoading(false);
+      const res = await resolveLawDong(sido, sigungu, dong);
+
+      const ok = res.data?.success;
+      const id = res.data?.data?.id;
+
+      if (!ok || !id) {
+        alert(res.data?.message || "지역 정보를 확정하지 못했어요");
+        return;
       }
-    })();
-  }, [sido, sigungu]);
 
-  const handleConfirm = () => {
-    if (!canConfirm || !selectedDong) return;
+      const lawDongId = id;
+      const label = `${sido} ${sigungu} ${dong}`;
 
-    const label = `${sido} ${sigungu} ${selectedDong.dong}`;
-    onConfirm({
-      sido,
-      sigungu,
-      dong: selectedDong.dong,
-      lawDongId: selectedDong.id,
-      label,
-    });
-    onClose();
+      onConfirm({ sido, sigungu, dong, lawDongId, label });
+      onClose();
+    } catch (e: any) {
+      console.error(e);
+
+      const status = e?.response?.status;
+      if (status === 404) {
+        alert("선택한 지역을 찾을 수 없어요. 다른 동을 선택해줘!");
+      } else {
+        alert("지역 정보를 확정하지 못했어요");
+      }
+    } finally {
+      setLoading(false);
+    }
   };
 
   if (!isOpen) return null;
 
   return (
     <div className="addrOverlay" onMouseDown={onClose}>
-      <div className="addrModal" onMouseDown={(e) => e.stopPropagation()}>
-        <div className="addrHeader">
-          <div className="addrTitle">지역 선택</div>
-          <button className="addrClose" type="button" onClick={onClose}>
+      <div className="addrModal addrModalChips" onMouseDown={(e) => e.stopPropagation()}>
+        <div className="addrHeader addrHeaderCenter">
+          <div className="addrTitle">지역 설정</div>
+          <button className="addrClose" type="button" onClick={onClose} disabled={loading}>
             ×
           </button>
         </div>
 
-        <div className="addrBody">
-          <div className="addrRow">
-            <label className="addrLabel">시/도</label>
-            <select
-              className="addrSelect"
-              value={sido}
-              onChange={(e) => setSido(e.target.value)}
-              disabled={loading}
-            >
-              <option value="">선택</option>
+        <div className="addrBodyChips">
+          <div className="addrSection">
+            <div className="addrSectionTitle">시/도</div>
+            <div className="addrChipGrid">
               {sidoList.map((x) => (
-                <option key={x} value={x}>
+                <button
+                  key={x}
+                  type="button"
+                  className={`addrChip ${sido === x ? "isActive" : ""}`}
+                  onClick={() => setSido(x)}
+                  disabled={loading}
+                >
                   {x}
-                </option>
+                </button>
               ))}
-            </select>
+            </div>
           </div>
 
-          <div className="addrRow">
-            <label className="addrLabel">시/군/구</label>
-            <select
-              className="addrSelect"
-              value={sigungu}
-              onChange={(e) => setSigungu(e.target.value)}
-              disabled={!sido || loading}
-            >
-              <option value="">선택</option>
+          <div className={`addrSection ${!sido ? "isDisabled" : ""}`}>
+            <div className="addrSectionTitle">시/군/구</div>
+            <div className="addrChipGrid">
               {sigunguList.map((x) => (
-                <option key={x} value={x}>
+                <button
+                  key={x}
+                  type="button"
+                  className={`addrChip ${sigungu === x ? "isActive" : ""}`}
+                  onClick={() => setSigungu(x)}
+                  disabled={!sido || loading}
+                >
                   {x}
-                </option>
+                </button>
               ))}
-            </select>
+            </div>
           </div>
 
-          <div className="addrRow">
-            <label className="addrLabel">동</label>
-            <select
-              className="addrSelect"
-              value={dongId ?? ""}
-              onChange={(e) => setDongId(Number(e.target.value))}
-              disabled={!sigungu || loading}
-            >
-              <option value="">선택</option>
+          <div className={`addrSection ${!sigungu ? "isDisabled" : ""}`}>
+            <div className="addrSectionTitle">읍/면/동</div>
+            <div className="addrChipGrid">
               {dongList.map((x) => (
-                <option key={x.id} value={x.id}>
-                  {x.dong}
-                </option>
+                <button
+                  key={x}
+                  type="button"
+                  className={`addrChip ${dong === x ? "isActive" : ""}`}
+                  onClick={() => setDong(x)}
+                  disabled={!sigungu || loading}
+                >
+                  {x}
+                </button>
               ))}
-            </select>
+            </div>
           </div>
         </div>
 
-        <div className="addrFooter">
-          <button className="addrBtn cancel" type="button" onClick={onClose}>
-            취소
-          </button>
+        <div className="addrFooterChips">
           <button
-            className={`addrBtn confirm ${!canConfirm ? "isDisabled" : ""}`}
+            className={`addrPrimary ${!canConfirm ? "isDisabled" : ""}`}
             type="button"
             onClick={handleConfirm}
             aria-disabled={!canConfirm}
+            disabled={!canConfirm || loading}
           >
-            선택 완료
+            {loading ? "저장 중..." : "지역 등록하기"}
           </button>
         </div>
       </div>

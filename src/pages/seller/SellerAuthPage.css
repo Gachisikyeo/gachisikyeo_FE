@@ -1,0 +1,187 @@
+/* src/pages/seller/SellerAuthPage.css */
+
+.sellerAuth {
+  padding: 48px 0 90px;
+  background: #f5f5f5;
+  min-height: calc(100vh - 140px);
+}
+
+.sellerAuth__pageTitle {
+  text-align: center;
+  font-size: 22px;
+  font-weight: 600;
+  margin: 0 0 28px;
+}
+
+.sellerAuth__card {
+  width: min(600px, 92vw); 
+  margin: 0 auto;
+  background: #fff;
+  border-radius: 10px;
+  border: 1px solid #d8d8d8;
+  box-shadow: 0 8px 18px rgba(0, 0, 0, 0.12);
+  padding: 40px 42px 46px; 
+}
+
+.sellerAuth__cardTitle {
+  font-size: 16px;
+  font-weight: 500;
+  margin: 0 0 26px;
+}
+
+.sellerAuth__form {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.sellerAuth__row {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr); 
+  align-items: center;
+  gap: 16px;
+}
+
+.sellerAuth__row--address {
+  align-items: start;
+}
+
+.sellerAuth__label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #2b2b2b;
+  text-align: left;
+  line-height: 38px;
+  white-space: nowrap;
+}
+
+.sellerAuth__control {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+
+.sellerAuth__control--verify {
+  display: flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.sellerAuth__input {
+  height: 38px;
+  border: 1px solid #cfcfcf;
+  border-radius: 6px;
+  padding: 0 12px;
+  outline: none;
+  font-size: 13px;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.sellerAuth__control--verify .sellerAuth__input {
+  width: auto;     
+  flex: 1;         
+  min-width: 0;    
+}
+
+.sellerAuth__input--wide {
+  width: 100%;
+  max-width: none;
+}
+
+.sellerAuth__verifyBtn {
+  height: 38px;
+  width: 96px;
+  flex: 0 0 auto;
+  border: none;
+  border-radius: 6px;
+  background: #2d9dff;
+  color: #fff;
+  font-weight: 500;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.sellerAuth__verifyBtn:disabled {
+  opacity: 0.7;
+  cursor: default;
+}
+
+.sellerAuth__verifyBtn.is-done {
+  background: #2d9dff;
+}
+
+.sellerAuth__hint {
+  margin: 0;
+  font-size: 11px;
+  color: #888;
+}
+
+.sellerAuth__terms {
+  margin-top: 18px;
+  padding-top: 18px;
+}
+
+.sellerAuth__termsTitle {
+  margin: 0 0 12px;
+  font-size: 16px;
+  font-weight: 400;
+}
+
+.sellerAuth__termsRow {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 8px 0;
+}
+
+.sellerAuth__checkLabel {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 12px;
+  color: #2b2b2b;
+}
+
+.sellerAuth__termsLink {
+  border: none;
+  background: transparent;
+  color: #6a6a6a;
+  font-size: 12px;
+  text-decoration: underline;
+  cursor: pointer;
+}
+
+.sellerAuth__error {
+  margin: 0;
+  color: #e33b3b;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.sellerAuth__submitWrap {
+  display: flex;
+  justify-content: center;
+  margin-top: 18px;
+}
+
+.sellerAuth__submitBtn {
+  width: min(340px, 92%); 
+  height: 44px;
+  border: none;
+  border-radius: 6px;
+  background: #2d9dff;
+  color: #fff;
+  font-size: 15px;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.sellerAuth__submitBtn:disabled {
+  background: #d9d9d9 !important;
+  color: #888 !important;
+  cursor: not-allowed;
+}

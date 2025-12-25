@@ -1,0 +1,239 @@
+.gp-modalOverlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.35);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+  z-index: 9999;
+}
+
+.gp-modal {
+  width: 720px;
+  max-width: 100%;
+  background: #fff;
+  border-radius: 18px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.18);
+  padding: 22px 22px 18px;
+  font-family: Pretendard, system-ui, -apple-system, Segoe UI, Roboto, sans-serif;
+
+  max-height: calc(100vh - 48px);
+  overflow: auto;
+  box-sizing: border-box;
+}
+
+.gp-modal * {
+  box-sizing: border-box;
+}
+
+.gp-header {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: flex-end; /* 닫기 버튼을 오른쪽으로 */
+  margin-bottom: 14px;
+}
+
+.gp-title {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  font-size: 22px;
+  font-weight: 700;
+  margin: 0;
+}
+
+
+.gp-closeBtn {
+  width: 30px;
+  height: 30px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  cursor: pointer;
+  font-size: 18px;
+  line-height: 1;
+}
+
+.gp-productTop {
+  border: 1px solid #e5e7eb;
+  border-radius: 14px;
+  padding: 12px 14px;
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  margin-bottom: 10px;
+  background: #f9fafb;
+  gap: 12px;
+}
+
+.gp-productName {
+  font-weight: 500;
+  font-size: 15px;
+  line-height: 1.2;
+}
+
+.gp-productPrice {
+  font-weight: 800;
+  font-size: 15px;
+  white-space: nowrap;
+}
+
+.gp-label {
+  font-size: 14px;
+  font-weight: 400;
+  margin-bottom: 8px;
+}
+
+.gp-qtyBlock {
+  margin-bottom: 16px;
+  margin-top: 8px;
+}
+
+.gp-qtyRow {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.gp-qtyBtn {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  cursor: pointer;
+  font-size: 18px;
+}
+
+.gp-qtyValue {
+  width: 56px;
+  height: 36px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  font-weight: 800;
+}
+
+.gp-totalPrice {
+  margin-left: auto;
+  font-size: 14px;
+  white-space: nowrap;
+}
+
+.gp-form {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  margin-bottom: 16px;
+}
+
+.gp-field {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.gp-input {
+  height: 44px;
+  border-radius: 14px;
+  border: 1px solid #e5e7eb;
+  padding: 0 14px;
+  font-size: 14px;
+  outline: none;
+}
+
+.gp-input:focus {
+  border-color: #93c5fd;
+  box-shadow: 0 0 0 3px rgba(147, 197, 253, 0.35);
+}
+
+.gp-helper {
+  margin-top: 6px;
+  font-size: 12px;
+  color: #6b7280;
+  line-height: 1.35;
+}
+
+.gp-helperInline {
+  margin-left: 8px;
+  margin-top: 0;
+}
+
+.gp-warnInline {
+  margin-top: 6px;
+  font-size: 12px;
+  color: #ef4444;
+}
+
+.gp-payBar {
+  display: flex;
+  gap: 12px;
+}
+
+.gp-payBtn {
+  flex: 1;
+  height: 46px;
+  border-radius: 14px;
+  border: none;
+  cursor: pointer;
+  font-weight: 900;
+  font-size: 14px;
+
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.gp-naver {
+  background: #03c75a;
+  color: #fff;
+}
+
+.gp-kakao {
+  background: #fee500;
+  color: #111;
+}
+
+.gp-payBtn:disabled,
+.gp-qtyBtn:disabled,
+.gp-closeBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.gp-warn {
+  margin-top: 10px;
+  font-size: 12px;
+  color: #ef4444;
+}
+
+.gp-subNote {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: #6b7280;
+  line-height: 1.35;
+}
+
+.gp-row2 {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+@media (max-width: 520px) {
+  .gp-modalOverlay {
+    padding: 14px;
+  }
+  .gp-modal {
+    padding: 18px 16px 14px;
+  }
+  .gp-row2 {
+    grid-template-columns: 1fr;
+  }
+}

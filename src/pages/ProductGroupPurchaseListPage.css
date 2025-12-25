@@ -1,0 +1,150 @@
+/* src/pages/ProductGroupPurchaseListPage.css */
+
+.gpListPage {
+  padding-top: 24px;
+  padding-bottom: 60px;
+}
+
+.gpListPage__inner {
+  width: 880px;
+  max-width: 100%;
+  margin: 0 auto;
+}
+
+.gpListPage__loading {
+  padding: 60px 0;
+  text-align: center;
+  color: #666;
+}
+
+.gpListPage__topBar {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 14px;
+}
+
+.gpListPage__createBtn {
+  width: 150px;
+  height: 40px;
+  border: none;
+  border-radius: 8px;
+  background: #2D9DFF;
+  color: #fff;
+  font-weight: 500;
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.gpListPage__createBtn:hover {
+  filter: brightness(0.98);
+}
+
+.gpListPage__list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.gpListPage__empty {
+  padding: 40px 0;
+  text-align: center;
+  color: #777;
+  font-weight: 700;
+}
+
+.gp-row {
+  width: 100%;
+  border: 1px solid #d9d8d8;
+  border-radius: 14px;
+  background: #fff;
+
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  cursor: pointer;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.08);
+}
+
+.gp-row:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 6px 16px rgba(0,0,0,0.10);
+}
+
+.gp-row__numBlue {
+  color: #2D9DFF;
+  font-weight: 500;
+  font-size: 18px;
+}
+
+.gp-row__numBlack {
+  color: #111;
+  font-weight: 500;
+  font-size: 13px;
+}
+
+.gp-row__left {
+  flex: 1;
+  min-width: 0;
+  font-size: 14px;
+  display: flex;
+  gap: 6px;
+  align-items: center;
+}
+
+.gp-row__host {
+  color: #2D9DFF;
+  font-weight: 500;
+  font-size: 19px;
+  white-space: nowrap;
+}
+
+.gp-row__text {
+  color: #111;
+  white-space: nowrap;
+  font-weight: 350;
+  font-size: 14px;
+}
+
+.gp-row__cols {
+  display: grid;
+  grid-template-columns: 110px 120px 150px 70px;
+  gap: 18px;
+  align-items: center;
+  font-size: 13px;
+  color: #111;
+  flex-shrink: 0;
+}
+
+.gp-row__progress {
+  font-weight: 800;
+  color: #2D9DFF;
+  text-align: center;
+}
+
+.gp-row__participants {
+  text-align: center;
+}
+
+.gp-row__participantsLabel {
+  color: #111;
+  font-weight: 350;
+  font-size: 14px;
+  margin-left: 3px;
+}
+
+.gp-row__deadline {
+  text-align: center;
+  color: #111;
+  font-weight: 350;
+  font-size: 14px;
+}
+
+.gp-row__region {
+  text-align: center;
+  color: #111;
+  white-space: nowrap;
+  font-weight: 350;
+  font-size: 14px;
+}
