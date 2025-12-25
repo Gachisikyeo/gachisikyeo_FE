@@ -1,5 +1,4 @@
 // 상품 주문 상세 페이지
-// 상품 주문 상세 페이지
 // src/pages/OrderDetailPage.tsx
 import { useEffect, useMemo, useState } from "react";
 import { useLocation, useNavigate, useParams } from "react-router-dom";

@@ -30,7 +30,7 @@ export type AuthUser = {
 const ACCESS_TOKEN_KEY = "accessToken";
 const REFRESH_TOKEN_KEY = "refreshToken";
 const USER_KEY = "authUser";
-const OAUTH2_SIGNUP_TOKEN_KEY = "oauth2SignupToken"; 
+const OAUTH2_SIGNUP_TOKEN_KEY = "oauth2SignupToken";
 
 export function getAccessToken(): string | null {
   try {
@@ -53,7 +53,6 @@ export function saveTokens(accessToken: string, refreshToken: string) {
     localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
     localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
   } catch {
-    // ignore
   }
 }
 
@@ -61,7 +60,6 @@ export function saveAuthUser(user: AuthUser) {
   try {
     localStorage.setItem(USER_KEY, JSON.stringify(user));
   } catch {
-    // ignore
   }
 }
 
@@ -107,6 +105,5 @@ export function clearOAuth2SignupToken() {
   try {
     sessionStorage.removeItem(OAUTH2_SIGNUP_TOKEN_KEY);
   } catch {
-    // ignore
   }
 }

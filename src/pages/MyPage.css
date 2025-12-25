@@ -1,5 +1,6 @@
 :root {
-  --mypage-width: 880px;}
+  --mypage-width: 880px;
+}
 
 .mypageWrap {
   width: 100%;
@@ -32,16 +33,13 @@
   gap: 12px;
 }
 
-.mypage__col--right {
-  align-items: flex-end;
-}
-
-.mypage__col--leftShift {
+.mypage__col--left {
   padding-left: 20px;
 }
 
-.mypage__col--rightShift {
-  padding-left: 250px;
+.mypage__col--right {
+  align-items: flex-end;
+  padding-right: 20px;
 }
 
 .mypage__field {
@@ -97,7 +95,6 @@
 
 .mypage__sectionTitle--mt {
   margin-top: 22px;
-  
 }
 
 /* ===== 리스트 ===== */
@@ -133,7 +130,7 @@
   width: 150px;
   height: 150px;
   border-radius: 12px;
-  background: #e9b6b6; 
+  background: #e9b6b6;
   flex: 0 0 150px;
   overflow: hidden;
 }
@@ -151,7 +148,6 @@
 }
 
 .mypage__productName {
-  font-size: var(--product-title-size);
   font-weight: 500;
   font-size: 17px;
   color: #111827;
@@ -231,10 +227,12 @@
     padding-left: 16px;
     padding-right: 16px;
   }
-  .mypage__col--leftShift {
+
+  .mypage__col--left {
     padding-left: 0;
   }
-  .mypage__col--rightShift {
+
+  .mypage__col--right {
     padding-right: 0;
   }
 }

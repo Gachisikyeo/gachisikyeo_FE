@@ -1,12 +1,12 @@
-// 마이페이지
-// src/pages/MyPage.tsx
+
+// // 마이페이지
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import Header from "../components/Header";
 import CategoryNav from "../components/CategoryNav";
 import { clearAuth, getAuthUser, type AuthUser } from "../auth/authStorage";
-import { logout } from "../api/api";
+import { getMypageMain, logout, type MypageGroupPurchaseDto, type PageResponse } from "../api/api";
 
 import { LuUser } from "react-icons/lu";
 import { FaMapMarkerAlt } from "react-icons/fa";
@@ -15,130 +15,85 @@ import { IoLocationOutline, IoTimeOutline } from "react-icons/io5";
 
 import "./MyPage.css";
 
-type OrderStatus = "COMPLETED" | "IN_PROGRESS";
-
-export type MyOrder = {
-  orderId: string;
-  status: OrderStatus;
-
-  productName: string;
-
-  totalPrice: number;
-  quantity: number;
-  eachPrice: number;
-  shippingFee: number;
-
-  pickupLocation?: string;
-  pickupAt?: string;
-};
-
-const LS_KEY = "gachi_my_orders_v1";
-
-// ✅ DEV TEMP START (임시로 마이페이지/주문내역을 바로 보기 위한 스위치)
-const DEV_FORCE_VIEW = true;
-// ✅ DEV TEMP END
-
-function safeParse<T>(raw: string | null, fallback: T): T {
-  if (!raw) return fallback;
-  try {
-    return JSON.parse(raw) as T;
-  } catch {
-    return fallback;
-  }
-}
-
-function loadOrders(): MyOrder[] {
-  return safeParse<MyOrder[]>(localStorage.getItem(LS_KEY), []);
-}
-
-function saveOrders(next: MyOrder[]) {
-  localStorage.setItem(LS_KEY, JSON.stringify(next));
-}
-
 function formatWonPhotoStyle(value: number) {
   if (value < 0) return `${value.toLocaleString("ko-KR")}원`;
   if (value < 1000) return `0,${String(value).padStart(3, "0")}원`;
   return `${value.toLocaleString("ko-KR")}원`;
 }
 
-function ensureDevDummyOrdersOnce() {
-  const current = loadOrders();
-  if (current.length > 0) return;
+type OrderRowItem = {
+  id: string;
+  productName: string;
+  totalPrice: number;
+  quantity: number;
+  eachPrice: number;
+  imageUrl?: string;
+};
 
-  const dummy: MyOrder[] = [
-    {
-      orderId: "2025122401",
-      status: "COMPLETED",
-      productName: "상하키친 포크카레 170g 12팩",
-      totalPrice: 12000, 
-      quantity: 3,
-      eachPrice: 1000,
-      shippingFee: 0,
-      pickupLocation: "온수동 ○○○ 앞",
-      pickupAt: "12/27 18:00",
-    },
-    {
-      orderId: "2025122402",
-      status: "IN_PROGRESS",
-      productName: "티아시아 마크니 커리 170g 12팩",
-      totalPrice: 3000, // ✅ 결제금액
-      quantity: 3,
-      eachPrice: 250,
-      shippingFee: 0,
-      pickupLocation: "오류동 ○○○ 앞",
-      pickupAt: "12/28 20:00",
-    },
-  ];
-
-  saveOrders(dummy);
+function toRowItem(dto: MypageGroupPurchaseDto): OrderRowItem {
+  const id = String(dto.participationId ?? dto.groupPurchaseId);
+  return {
+    id,
+    productName: dto.productName,
+    totalPrice: dto.totalPrice,
+    quantity: dto.quantity,
+    eachPrice: dto.unitPrice,
+    imageUrl: dto.imageUrl,
+  };
 }
 
 export default function MyPage() {
   const navigate = useNavigate();
+  const initialUser = useMemo<AuthUser>(() => getAuthUser(), []);
+  const [user, setUser] = useState<AuthUser>(initialUser);
 
-  const realUser = useMemo<AuthUser>(() => getAuthUser(), []);
-  const [user, setUser] = useState<AuthUser>(realUser);
+  const [profile, setProfile] = useState<{ nickname: string; email: string; lawDong: string | null } | null>(null);
+  const [completedPage, setCompletedPage] = useState<PageResponse<MypageGroupPurchaseDto> | null>(null);
+  const [ongoingPage, setOngoingPage] = useState<PageResponse<MypageGroupPurchaseDto> | null>(null);
 
-  const [orders, setOrders] = useState<MyOrder[]>([]);
+  const [loading, setLoading] = useState(false);
   const [showAllOrders, setShowAllOrders] = useState(false);
   const [showAllParticipating, setShowAllParticipating] = useState(false);
 
-  // ✅ DEV TEMP START (로그인 안 해도 BUYER로 보이게)
-  const devUser: AuthUser = useMemo(
-    () =>
-      ({
-        isLoggedIn: true,
-        userType: "BUYER",
-        name: "꿀단지",
-        nickName: "꿀단지",
-        email: "gaci09@gmail.com",
-        lawDong: { sido: "서울특별시", sigungu: "구로구", dong: "온수동", lawDongId: 1 },
-      } as any),
-    []
-  );
-  const effectiveUser = DEV_FORCE_VIEW ? devUser : user;
-  // ✅ DEV TEMP END
+  const fetchMypage = async (opts: { completed: boolean; ongoing: boolean }) => {
+    setLoading(true);
+    try {
+      const res = await getMypageMain(opts);
 
-  useEffect(() => {
-    setUser(getAuthUser());
-    if (DEV_FORCE_VIEW) ensureDevDummyOrdersOnce();
-    setOrders(loadOrders());
-  }, []);
+      setProfile({
+        nickname: res.data.nickname,
+        email: res.data.email,
+        lawDong: res.data.lawDong ?? null,
+      });
 
-  // ✅ DEV TEMP START (DEV_FORCE_VIEW면 접근 제한 스킵)
-  useEffect(() => {
-    if (DEV_FORCE_VIEW) return;
-    if (!user.isLoggedIn || user.userType !== "BUYER") {
-      navigate("/", { replace: true });
+      setCompletedPage(res.data.completedGroupPurchases ?? { content: [] });
+      setOngoingPage(res.data.ongoingGroupPurchases ?? { content: [] });
+    } catch (e) {
+      console.error(e);
+      setCompletedPage({ content: [] });
+      setOngoingPage({ content: [] });
+    } finally {
+      setLoading(false);
     }
-  }, [navigate, user.isLoggedIn, user.userType]);
-  // ✅ DEV TEMP END
+  };
+
+  useEffect(() => {
+    const u = getAuthUser();
+    setUser(u);
+
+    if (!(u as any).isLoggedIn) {
+      navigate("/", { replace: true });
+      return;
+    }
+
+    fetchMypage({ completed: false, ongoing: false });
+  }, [navigate]);
 
   const handleLogout = async () => {
     try {
       await logout();
     } catch (e) {
-      console.error("logout failed:", e);
+      console.error(e);
     } finally {
       clearAuth();
       setUser({ isLoggedIn: false, userType: "GUEST" } as AuthUser);
@@ -146,31 +101,42 @@ export default function MyPage() {
     }
   };
 
-  const nameValue = (effectiveUser as any).name ?? "사용자";
-  const nickNameValue = (effectiveUser as any).nickName ?? "-";
-  const emailValue = (effectiveUser as any).email ?? "-";
-  const regionValue = (effectiveUser as any).lawDong?.dong ?? "위치 미설정";
+  const nameValue = (user as any).name ?? "사용자";
+  const nickNameValue = profile?.nickname ?? (user as any).nickName ?? "-";
+  const emailValue = profile?.email ?? (user as any).email ?? "-";
+  const regionValue = profile?.lawDong ?? (user as any).lawDong?.dong ?? "위치 미설정";
 
-  const completedOrders = orders.filter((o) => o.status === "COMPLETED");
-  const participatingOrders = orders.filter((o) => o.status === "IN_PROGRESS");
+  const completedItems = (completedPage?.content ?? []).map(toRowItem);
+  const ongoingItems = (ongoingPage?.content ?? []).map(toRowItem);
 
-  const visibleCompleted = showAllOrders ? completedOrders : completedOrders.slice(0, 1);
-  const visibleParticipating = showAllParticipating
-    ? participatingOrders
-    : participatingOrders.slice(0, 1);
+  const completedTotal = completedPage?.totalElements ?? completedItems.length;
+  const ongoingTotal = ongoingPage?.totalElements ?? ongoingItems.length;
+
+  const canToggleCompleted = completedTotal > 1;
+  const canToggleOngoing = ongoingTotal > 1;
+
+  const toggleCompleted = async () => {
+    const next = !showAllOrders;
+    setShowAllOrders(next);
+    await fetchMypage({ completed: next, ongoing: showAllParticipating });
+  };
+
+  const toggleOngoing = async () => {
+    const next = !showAllParticipating;
+    setShowAllParticipating(next);
+    await fetchMypage({ completed: showAllOrders, ongoing: next });
+  };
 
   return (
     <div>
-      <Header user={effectiveUser} onLogout={handleLogout} />
-      <CategoryNav user={effectiveUser} />
+      <Header user={user} onLogout={handleLogout} />
+      <CategoryNav user={user} />
 
       <main className="app-layout">
         <div className="mypageWrap">
-          {/* 상단 유저 정보 패널 */}
           <section className="mypage__userPanel">
             <div className="mypage__userGrid">
-              {/* LEFT */}
-              <div className="mypage__col mypage__col--leftShift">
+              <div className="mypage__col mypage__col--left">
                 <div className="mypage__field">
                   <div className="mypage__label">이름</div>
                   <div className="mypage__value">
@@ -188,8 +154,7 @@ export default function MyPage() {
                 </div>
               </div>
 
-              {/* RIGHT */}
-              <div className="mypage__col mypage__col--right mypage__col--rightShift">
+              <div className="mypage__col mypage__col--right">
                 <div className="mypage__field">
                   <div className="mypage__label">닉네임</div>
                   <div className="mypage__value">
@@ -209,61 +174,38 @@ export default function MyPage() {
             </div>
           </section>
 
-          {/* 주문내역 */}
           <div className="mypage__sectionTitle">주문내역</div>
 
           <section className="mypage__list">
-            {visibleCompleted.length === 0 ? (
+            {loading && completedItems.length === 0 ? (
+              <div className="mypage__empty">불러오는 중이야…</div>
+            ) : completedItems.length === 0 ? (
               <div className="mypage__empty">주문내역이 아직 없어!</div>
             ) : (
-              visibleCompleted.map((o) => (
-                <OrderRow
-                  key={o.orderId}
-                  order={o}
-                  onClick={() =>
-                    navigate(`/mypage/orders/${o.orderId}`, { state: { order: o } })
-                  }
-                />
-              ))
+              completedItems.map((o) => <OrderRow key={o.id} order={o} onClick={() => navigate(`/mypage/orders/${o.id}`)} />)
             )}
 
-            {completedOrders.length > 1 && (
-              <button
-                type="button"
-                className="mypage__moreBtn"
-                onClick={() => setShowAllOrders((v) => !v)}
-              >
+            {canToggleCompleted && (
+              <button type="button" className="mypage__moreBtn" onClick={toggleCompleted} disabled={loading}>
                 더보기 <span className={`mypage__chev ${showAllOrders ? "is-up" : ""}`}>⌄</span>
               </button>
             )}
           </section>
 
-          {/* 참가중인 공구 */}
           <div className="mypage__sectionTitle mypage__sectionTitle--mt">참가중인 공구</div>
 
           <section className="mypage__list">
-            {visibleParticipating.length === 0 ? (
-              <div className="mypage__empty">참가중인 공구가 아직 없어요</div>
+            {loading && ongoingItems.length === 0 ? (
+              <div className="mypage__empty">불러오는 중이야…</div>
+            ) : ongoingItems.length === 0 ? (
+              <div className="mypage__empty">참가중인 공구가 아직 없어!</div>
             ) : (
-              visibleParticipating.map((o) => (
-                <OrderRow
-                  key={o.orderId}
-                  order={o}
-                  onClick={() =>
-                    navigate(`/mypage/orders/${o.orderId}`, { state: { order: o } })
-                  }
-                />
-              ))
+              ongoingItems.map((o) => <OrderRow key={o.id} order={o} onClick={() => {}} />)
             )}
 
-            {participatingOrders.length > 1 && (
-              <button
-                type="button"
-                className="mypage__moreBtn"
-                onClick={() => setShowAllParticipating((v) => !v)}
-              >
-                더보기{" "}
-                <span className={`mypage__chev ${showAllParticipating ? "is-up" : ""}`}>⌄</span>
+            {canToggleOngoing && (
+              <button type="button" className="mypage__moreBtn" onClick={toggleOngoing} disabled={loading}>
+                더보기 <span className={`mypage__chev ${showAllParticipating ? "is-up" : ""}`}>⌄</span>
               </button>
             )}
           </section>
@@ -273,10 +215,12 @@ export default function MyPage() {
   );
 }
 
-function OrderRow({ order, onClick }: { order: MyOrder; onClick: () => void }) {
+function OrderRow({ order, onClick }: { order: OrderRowItem; onClick: () => void }) {
   return (
     <button type="button" className="mypage__orderCard" onClick={onClick}>
-      <div className="mypage__thumb" aria-hidden />
+      <div className="mypage__thumb" aria-hidden>
+        {order.imageUrl ? <img src={order.imageUrl} alt={order.productName} /> : null}
+      </div>
 
       <div className="mypage__orderInfo">
         <div className="mypage__productName">{order.productName}</div>
@@ -289,7 +233,6 @@ function OrderRow({ order, onClick }: { order: MyOrder; onClick: () => void }) {
         <div className="mypage__metaRow">
           <span>총 수량 : {String(order.quantity).padStart(2, "0")}개</span>
           <span>개당 가격 : {formatWonPhotoStyle(order.eachPrice)}</span>
-          {/* ✅ 배송비 제거 */}
         </div>
 
         <div className="mypage__line">

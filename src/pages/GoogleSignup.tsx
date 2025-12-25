@@ -38,7 +38,9 @@ export default function GoogleSignup() {
   const [nickName, setNickName] = useState("");
 
   const [addressLabel, setAddressLabel] = useState("");
-  const [lawDongId, setLawDongId] = useState<number | null>(null);
+  // const [lawDongId, setLawDongId] = useState<number | null>(null);
+  const [lawCode, setLawCode] = useState<string | null>(null);
+
   const [isAddrOpen, setIsAddrOpen] = useState(false);
 
   const [errorMsg, setErrorMsg] = useState("");
@@ -50,13 +52,13 @@ export default function GoogleSignup() {
   }, []);
 
   const canSubmit = useMemo(() => {
-    return userType !== null && nickName.trim().length > 0 && lawDongId !== null;
-  }, [userType, nickName, lawDongId]);
+    return userType !== null && nickName.trim().length > 0 && lawCode !== null;
+  }, [userType, nickName, lawCode]);
 
   const showMissingMsg = () => {
     if (!userType) return setErrorMsg("판매자/구매자 중 하나를 선택하세요.");
     if (!nickName.trim()) return setErrorMsg("닉네임을 입력하세요.");
-    if (!lawDongId) return setErrorMsg("지역을 선택하세요.");
+    if (lawCode === null) return setErrorMsg("지역을 선택하세요.");
     setErrorMsg("");
   };
 
@@ -78,7 +80,7 @@ export default function GoogleSignup() {
         oauth2SignupToken,
         nickName: nickName.trim(),
         userType: userType!,
-        lawDongId: lawDongId!,
+        lawDongId: Number(lawCode),
       });
 
       if (!res.data?.success) {
@@ -174,15 +176,17 @@ export default function GoogleSignup() {
             />
           </div>
 
+          // AddressModal onConfirm
           <AddressModal
             isOpen={isAddrOpen}
             onClose={() => setIsAddrOpen(false)}
-            onConfirm={({ label, lawDongId }) => {
+            onConfirm={({ label, lawCode }) => {
               setAddressLabel(label);
-              setLawDongId(lawDongId);
+              setLawCode(lawCode);
               setErrorMsg("");
             }}
           />
+
 
           {errorMsg && <p className="signupError">{errorMsg}</p>}
 

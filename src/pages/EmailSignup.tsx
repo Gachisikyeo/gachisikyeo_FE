@@ -1,5 +1,6 @@
 // src/pages/EmailSignup.tsx
-import { useMemo, useRef, useState } from "react";
+
+import { useMemo, useRef, useState, type FormEvent } from "react";
 import { useNavigate } from "react-router-dom";
 import { FiMail, FiLock, FiUser } from "react-icons/fi";
 import { HiOutlineLocationMarker } from "react-icons/hi";
@@ -32,7 +33,9 @@ export default function EmailSignup() {
 
   const [errorMsg, setErrorMsg] = useState("");
   const [addressLabel, setAddressLabel] = useState("");
-  const [lawDongId, setLawDongId] = useState<number | null>(null);
+  // const [lawDongId, setLawDongId] = useState<number | null>(null);
+  const [lawCode, setLawCode] = useState<string | null>(null);
+
   const [isAddrOpen, setIsAddrOpen] = useState(false);
 
   const canSubmit = useMemo(() => {
@@ -42,11 +45,13 @@ export default function EmailSignup() {
       password.trim().length > 0 &&
       name.trim().length > 0 &&
       nickName.trim().length > 0 &&
-      lawDongId !== null &&
+      // lawDongId !== null
+      lawCode !== null 
+      &&
       agree1 &&
       agree2
     );
-  }, [userType, email, password, name, nickName, lawDongId, agree1, agree2]);
+  }, [userType, email, password, name, nickName, lawCode, agree1, agree2]);
 
   const showMissingMsg = () => {
     if (!userType) return setErrorMsg("판매자/구매자 중 하나를 선택하세요.");
@@ -54,7 +59,7 @@ export default function EmailSignup() {
     if (!password.trim()) return setErrorMsg("비밀번호를 입력하세요.");
     if (!name.trim()) return setErrorMsg("이름을 입력하세요.");
     if (!nickName.trim()) return setErrorMsg("닉네임을 입력하세요.");
-    if (!lawDongId) return setErrorMsg("지역을 선택하세요.");
+    if (lawCode === null) return setErrorMsg("지역을 선택하세요.");
     if (!agree1 || !agree2) return setErrorMsg("약관에 동의해주세요.");
     setErrorMsg("");
   };
@@ -66,11 +71,10 @@ export default function EmailSignup() {
         password: password.trim(),
         name: name.trim(),
         nickName: nickName.trim(),
-        userType: userType!, // canSubmit에서 null 아닌거 보장
-        lawDongId: lawDongId!, // canSubmit에서 null 아닌거 보장
+        userType: userType!, 
+        lawDongId: Number(lawCode),
       });
 
-      // ✅ Swagger 공통 응답(success/message/data) 기준
       if (!res.data?.success) {
         setErrorMsg(res.data?.message || "회원가입에 실패했습니다. 다시 시도해주세요.");
         return;
@@ -100,10 +104,15 @@ export default function EmailSignup() {
     await doSignup();
   };
 
-  const onSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    trySubmit();
-  };
+  // const onSubmit = (e: React.FormEvent) => {
+  //   e.preventDefault();
+  //   trySubmit();
+  // };
+  const onSubmit = (e: FormEvent<HTMLFormElement>) => {
+  e.preventDefault();
+  trySubmit();
+};
+
 
   return (
     <div className="signupPage">
@@ -218,9 +227,9 @@ export default function EmailSignup() {
           <AddressModal
             isOpen={isAddrOpen}
             onClose={() => setIsAddrOpen(false)}
-            onConfirm={({ label, lawDongId }) => {
+            onConfirm={({ label, lawCode }) => {
               setAddressLabel(label);
-              setLawDongId(lawDongId);
+              setLawCode(lawCode);                
               setErrorMsg("");
             }}
           />

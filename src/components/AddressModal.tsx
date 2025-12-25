@@ -1,4 +1,4 @@
-
+// src/components/AddressModal.tsx
 import { useEffect, useMemo, useState } from "react";
 import "./AddressModal.css";
 import { getDongList, getSidoList, getSigunguList, resolveLawDong } from "../api/api";
@@ -10,7 +10,7 @@ type Props = {
     sido: string;
     sigungu: string;
     dong: string;
-    lawDongId: number;
+    lawCode: string;
     label: string;
   }) => void;
 };
@@ -45,13 +45,11 @@ export default function AddressModal({ isOpen, onClose, onConfirm }: Props) {
     };
   }, [isOpen, onClose]);
 
-  // 모달 열리면 시/도 불러오기
   useEffect(() => {
     if (!isOpen) return;
 
     let alive = true;
 
-    
     setSido("");
     setSigungu("");
     setDong("");
@@ -110,7 +108,6 @@ export default function AddressModal({ isOpen, onClose, onConfirm }: Props) {
     };
   }, [isOpen, sido]);
 
-  // 시군구 선택 > 동 불러오기
   useEffect(() => {
     if (!isOpen) return;
     if (!sido || !sigungu) return;
@@ -146,30 +143,29 @@ export default function AddressModal({ isOpen, onClose, onConfirm }: Props) {
     try {
       setLoading(true);
 
-    let res: any;
+      let res: any;
 
-    try {
-      res = await (resolveLawDong as any)({ sido, sigungu, dong });
-    } catch (err: any) {
-      if (err instanceof TypeError) {
-        res = await (resolveLawDong as any)(sido, sigungu, dong);
-      } else {
-        throw err;
+      try {
+        res = await (resolveLawDong as any)({ sido, sigungu, dong });
+      } catch (err: any) {
+        if (err instanceof TypeError) {
+          res = await (resolveLawDong as any)(sido, sigungu, dong);
+        } else {
+          throw err;
+        }
       }
-    }
 
       const ok = res.data?.success;
-      const id = res.data?.data?.id;
+      const data = res.data?.data;
+      const lawCode = data?.lawCode ?? (data?.id != null ? String(data.id) : null);
 
-      if (!ok || !id) {
+      if (!ok || !lawCode) {
         alert(res.data?.message || "지역 정보를 확정하지 못했어요");
         return;
       }
 
-      const lawDongId = id;
       const label = `${sido} ${sigungu} ${dong}`;
-
-      onConfirm({ sido, sigungu, dong, lawDongId, label });
+      onConfirm({ sido, sigungu, dong, lawCode, label });
       onClose();
     } catch (e: any) {
       console.error(e);
