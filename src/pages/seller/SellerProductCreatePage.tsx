@@ -446,8 +446,8 @@ export default function SellerProductCreatePage() {
                 <label className="spcCheck">
                   <input
                     type="checkbox"
-                    checked={category === "CLOTHING"}
-                    onChange={() => toggleCategory("CLOTHING")}
+                    checked={category === "CLOTHES"}
+                    onChange={() => toggleCategory("CLOTHES")}
                   />
                   <span>의류</span>
                 </label>

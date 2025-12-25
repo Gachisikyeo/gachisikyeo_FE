@@ -119,3 +119,43 @@
   color: #888 !important;
   cursor: not-allowed;
 }
+
+.addrOverlay {
+  padding: 24px 0;
+  overflow-y: auto;
+}
+
+.addrModal {
+  max-height: calc(100vh - 120px); 
+  display: flex;
+  flex-direction: column;
+}
+
+.addrBodyChips {
+  overflow-y: auto;
+  flex: 1;
+}
+
+.addrFooterChips {
+  flex-shrink: 0;
+}
+
+.addrOverlay {
+  padding: 24px 0;
+  overflow-y: auto;
+}
+
+.addrModal {
+  max-height: calc(100vh - 120px); 
+  display: flex;
+  flex-direction: column;
+}
+
+.addrBodyChips {
+  overflow-y: auto;
+  flex: 1;
+}
+
+.addrFooterChips {
+  flex-shrink: 0;
+}

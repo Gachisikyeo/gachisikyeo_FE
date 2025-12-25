@@ -28,7 +28,6 @@ export default function AddressModal({ isOpen, onClose, onConfirm }: Props) {
 
   const canConfirm = useMemo(() => Boolean(sido && sigungu && dong), [sido, sigungu, dong]);
 
-  // ✅ ESC로 닫기 + 모달 열릴 때 스크롤 잠금(원치 않으면 지워도 됨)
   useEffect(() => {
     if (!isOpen) return;
 
@@ -52,7 +51,7 @@ export default function AddressModal({ isOpen, onClose, onConfirm }: Props) {
 
     let alive = true;
 
-    // 초기화
+    
     setSido("");
     setSigungu("");
     setDong("");
@@ -80,7 +79,6 @@ export default function AddressModal({ isOpen, onClose, onConfirm }: Props) {
     };
   }, [isOpen]);
 
-  // 시/도 선택 > 시군구 불러오기
   useEffect(() => {
     if (!isOpen) return;
     if (!sido) return;
@@ -148,7 +146,17 @@ export default function AddressModal({ isOpen, onClose, onConfirm }: Props) {
     try {
       setLoading(true);
 
-      const res = await resolveLawDong(sido, sigungu, dong);
+    let res: any;
+
+    try {
+      res = await (resolveLawDong as any)({ sido, sigungu, dong });
+    } catch (err: any) {
+      if (err instanceof TypeError) {
+        res = await (resolveLawDong as any)(sido, sigungu, dong);
+      } else {
+        throw err;
+      }
+    }
 
       const ok = res.data?.success;
       const id = res.data?.data?.id;
