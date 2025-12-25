@@ -364,17 +364,36 @@ export type PageResponse<T> = {
   size?: number;
 };
 
-export type MypageGroupPurchaseDto = {
+export type MyProfileResponseDto = {
+  nickname: string;
+  email: string;
+  lawDong: string | null;
+  userType: string;
+};
+
+export type SliceResponse<T> = {
+  items: T[];
+  page: number;
+  size: number;
+  hasNext: boolean;
+};
+
+export type MyParticipationGroupPurchaseDto = {
+  participationId: number;
   groupPurchaseId: number;
   productName: string;
   imageUrl?: string;
   totalPrice: number;
   unitPrice: number;
-  quantity: number;
-  pickupLocation?: string;
-  pickupTime?: string;
-  participationId?: number;
+  totalQuantity: number;
+  myQuantity: number;
+  myPaymentAmount: number;
+  pickupLocation: string;
+  pickupTime: string;
+  groupPurchaseStatus: string;
 };
+
+export type MypageGroupPurchaseDto = MyParticipationGroupPurchaseDto;
 
 export type MypageResponseDto = {
   nickname: string;
@@ -399,12 +418,47 @@ export type CompletedGroupPurchaseDetailDto = {
   paymentAmount: number;
 };
 
-export const getMypageMain = (params?: { completed?: boolean; ongoing?: boolean }) => {
-  return api.get<MypageResponseDto>("/api/mypage/main", { params });
+export const getMypageProfile = () => {
+  return api.get<ApiResponseTemplate<MyProfileResponseDto>>("/api/mypage/profile");
+};
+
+export const getMypageParticipationsOngoing = (params: { page?: number; size?: number }) => {
+  return api.get<ApiResponseTemplate<SliceResponse<MyParticipationGroupPurchaseDto>>>("/api/mypage/participations/ongoing", { params });
+};
+
+export const getMypageParticipationsCompleted = (params: { page?: number; size?: number }) => {
+  return api.get<ApiResponseTemplate<SliceResponse<MyParticipationGroupPurchaseDto>>>("/api/mypage/participations/completed", { params });
+};
+
+export const getMypageMain = async (params?: { completed?: boolean; ongoing?: boolean }) => {
+  const wantCompleted = params?.completed ?? false;
+  const wantOngoing = params?.ongoing ?? false;
+
+  const [profileRes, completedRes, ongoingRes] = await Promise.all([
+    getMypageProfile(),
+    wantCompleted ? getMypageParticipationsCompleted({ page: 0, size: 3 }) : Promise.resolve(null),
+    wantOngoing ? getMypageParticipationsOngoing({ page: 0, size: 3 }) : Promise.resolve(null),
+  ]);
+
+  const profile = profileRes.data.data;
+
+  const completedItems = completedRes?.data.data.items ?? [];
+  const ongoingItems = ongoingRes?.data.data.items ?? [];
+
+  return {
+    data: {
+      nickname: profile.nickname,
+      email: profile.email,
+      lawDong: profile.lawDong,
+      userType: profile.userType,
+      completedGroupPurchases: wantCompleted ? ({ content: completedItems } as PageResponse<MypageGroupPurchaseDto>) : undefined,
+      ongoingGroupPurchases: wantOngoing ? ({ content: ongoingItems } as PageResponse<MypageGroupPurchaseDto>) : undefined,
+    } as MypageResponseDto,
+  };
 };
 
 export const getMypageCompletedDetail = (participationId: number) => {
-  return api.get<CompletedGroupPurchaseDetailDto>(`/api/mypage/completed/${participationId}`);
+  return api.get<ApiResponseTemplate<CompletedGroupPurchaseDetailDto>>(`/api/mypage/completed/${participationId}`);
 };
 
 export default api;
