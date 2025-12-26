@@ -15,7 +15,7 @@ import {
   type SliceResponse,
 } from "../api/api";
 
-import { LuUser } from "react-icons/lu";
+import { LuUser, LuLock } from "react-icons/lu";
 import { FaMapMarkerAlt } from "react-icons/fa";
 import { MdOutlineEmail } from "react-icons/md";
 import { IoLocationOutline, IoTimeOutline } from "react-icons/io5";
@@ -59,6 +59,12 @@ function toRowItem(dto: MyParticipationGroupPurchaseDto): OrderRowItem {
   };
 }
 
+function userTypeLabel(userType: any) {
+  if (userType === "SELLER") return "판매자";
+  if (userType === "BUYER") return "구매자";
+  return "게스트";
+}
+
 export default function MyPage() {
   const navigate = useNavigate();
   const initialUser = useMemo<AuthUser>(() => getAuthUser(), []);
@@ -69,7 +75,12 @@ export default function MyPage() {
   const [completedItems, setCompletedItems] = useState<MyParticipationGroupPurchaseDto[]>([]);
   const [ongoingItems, setOngoingItems] = useState<MyParticipationGroupPurchaseDto[]>([]);
 
-  const [completedMeta, setCompletedMeta] = useState<{ page: number; size: number; hasNext: boolean; expanded: boolean }>({
+  const [completedMeta, setCompletedMeta] = useState<{
+    page: number;
+    size: number;
+    hasNext: boolean;
+    expanded: boolean;
+  }>({
     page: 0,
     size: 1,
     hasNext: false,
@@ -148,10 +159,11 @@ export default function MyPage() {
     }
   };
 
-  const nameValue = (user as any).name ?? "사용자";
+  // ✅ 화면 표시에 쓸 값들
   const nickNameValue = profile?.nickname ?? (user as any).nickName ?? "-";
   const emailValue = profile?.email ?? (user as any).email ?? "-";
   const regionValue = profile?.lawDong ?? (user as any).lawDong?.dong ?? "위치 미설정";
+  const userTypeValue = userTypeLabel((user as any).userType);
 
   const completedRows = completedItems.map(toRowItem);
   const ongoingRows = ongoingItems.map(toRowItem);
@@ -167,7 +179,12 @@ export default function MyPage() {
         const res = await getMypageParticipationsCompleted({ page: 0, size: 3 });
         const slice = unwrapData<SliceResponse<MyParticipationGroupPurchaseDto>>(res);
         setCompletedItems(slice?.items ?? []);
-        setCompletedMeta({ page: slice?.page ?? 0, size: slice?.size ?? 3, hasNext: !!slice?.hasNext, expanded: true });
+        setCompletedMeta({
+          page: slice?.page ?? 0,
+          size: slice?.size ?? 3,
+          hasNext: !!slice?.hasNext,
+          expanded: true,
+        });
         return;
       }
 
@@ -210,12 +227,13 @@ export default function MyPage() {
         <div className="mypageWrap">
           <section className="mypage__userPanel">
             <div className="mypage__userGrid">
+              {/* ✅ 왼쪽: 닉네임 / 이메일 */}
               <div className="mypage__col mypage__col--left">
                 <div className="mypage__field">
-                  <div className="mypage__label">이름</div>
+                  <div className="mypage__label">닉네임</div>
                   <div className="mypage__value">
                     <LuUser className="mypage__icon" />
-                    {nameValue}
+                    {nickNameValue}
                   </div>
                 </div>
 
@@ -228,20 +246,21 @@ export default function MyPage() {
                 </div>
               </div>
 
+              {/* ✅ 오른쪽: 지역 / 유저타입(이름 대신) */}
               <div className="mypage__col mypage__col--right">
-                <div className="mypage__field">
-                  <div className="mypage__label">닉네임</div>
-                  <div className="mypage__value">
-                    <LuUser className="mypage__icon" />
-                    {nickNameValue}
-                  </div>
-                </div>
-
                 <div className="mypage__field">
                   <div className="mypage__label">지역</div>
                   <div className="mypage__value">
                     <FaMapMarkerAlt className="mypage__icon" />
                     {regionValue}
+                  </div>
+                </div>
+
+                <div className="mypage__field">
+                  <div className="mypage__label">유저타입</div>
+                  <div className="mypage__value">
+                    <LuLock className="mypage__icon" />
+                    {userTypeValue}
                   </div>
                 </div>
               </div>
@@ -256,7 +275,9 @@ export default function MyPage() {
             ) : completedItems.length === 0 ? (
               <div className="mypage__empty">주문내역이 아직 없어요</div>
             ) : (
-              completedRows.map((o) => <OrderRow key={o.id} order={o} onClick={() => navigate(`/mypage/orders/${o.id}`)} />)
+              completedRows.map((o) => (
+                <OrderRow key={o.id} order={o} onClick={() => navigate(`/mypage/orders/${o.id}`)} />
+              ))
             )}
 
             {canMoreCompleted && (

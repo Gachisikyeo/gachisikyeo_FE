@@ -247,7 +247,6 @@
   text-align: right;
 }
 
-
 @media (max-width: 720px) {
   .mypage__userGrid {
     grid-template-columns: 1fr;

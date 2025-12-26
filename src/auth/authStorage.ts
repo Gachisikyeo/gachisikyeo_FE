@@ -1,5 +1,4 @@
 // 토큰/유저 저장/조회/초기화 전담 파일
-// src/auth/authStorage.ts
 
 export type UserType = "GUEST" | "BUYER" | "SELLER";
 
@@ -32,6 +31,26 @@ const REFRESH_TOKEN_KEY = "refreshToken";
 const USER_KEY = "authUser";
 const OAUTH2_SIGNUP_TOKEN_KEY = "oauth2SignupToken";
 
+const LEGACY_LOCAL_KEYS = [
+  "devUserRole",
+  "userType",
+  "signup_nickName",
+  "sellerBusinessInfoData",
+  "sellerBusinessInfoRegistered",
+  "gachi_my_orders_v1",
+];
+
+function removeLocalKeys(keys: string[]) {
+  try {
+    keys.forEach((k) => localStorage.removeItem(k));
+  } catch {
+  }
+}
+
+function cleanupLegacyOnLoginSave() {
+  removeLocalKeys(["devUserRole", "userType", "signup_nickName"]);
+}
+
 export function getAccessToken(): string | null {
   try {
     return localStorage.getItem(ACCESS_TOKEN_KEY);
@@ -49,6 +68,7 @@ export function getRefreshToken(): string | null {
 }
 
 export function saveTokens(accessToken: string, refreshToken: string) {
+  cleanupLegacyOnLoginSave();
   try {
     localStorage.setItem(ACCESS_TOKEN_KEY, accessToken);
     localStorage.setItem(REFRESH_TOKEN_KEY, refreshToken);
@@ -57,6 +77,7 @@ export function saveTokens(accessToken: string, refreshToken: string) {
 }
 
 export function saveAuthUser(user: AuthUser) {
+  cleanupLegacyOnLoginSave();
   try {
     localStorage.setItem(USER_KEY, JSON.stringify(user));
   } catch {
@@ -80,16 +101,22 @@ export function clearAuth() {
     localStorage.removeItem(ACCESS_TOKEN_KEY);
     localStorage.removeItem(REFRESH_TOKEN_KEY);
     localStorage.removeItem(USER_KEY);
+
+    removeLocalKeys(LEGACY_LOCAL_KEYS);
   } catch {
-    // ignore
   }
+
+  clearOAuth2SignupToken();
+}
+
+export function setOAuth2signupToken(token: string) {
+  setOAuth2SignupToken(token);
 }
 
 export function setOAuth2SignupToken(token: string) {
   try {
     sessionStorage.setItem(OAUTH2_SIGNUP_TOKEN_KEY, token);
   } catch {
-    // ignore
   }
 }
 

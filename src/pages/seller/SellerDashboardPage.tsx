@@ -1,6 +1,6 @@
 // 판매자 대시보드 페이지
 // src/pages/seller/SellerDashboardPage.tsx
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 import Header from "../../components/Header";
@@ -11,23 +11,29 @@ import { BsBarChartLineFill } from "react-icons/bs";
 
 import "./SellerDashboardPage.css";
 import { clearAuth, getAuthUser, type AuthUser } from "../../auth/authStorage";
-import { logout } from "../../api/api";
+import {
+  getSellerDashboardProducts,
+  getSellerMonthlySales,
+  logout,
+  type PageResponseSellerProductResponse,
+} from "../../api/api";
 
 type Props = {
-  user?: AuthUser; // App.tsx가 prop으로 넘겨도 되고, 안 넘겨도 됨
-};
-
-type ProductRow = {
-  id: number;
-  name: string;
-  price: number;
-  stock: number;
-  createdAt: string;
+  user?: AuthUser;
 };
 
 export default function SellerDashboardPage({ user: userProp }: Props) {
   const navigate = useNavigate();
   const user = userProp ?? getAuthUser();
+
+  const [productsPage, setProductsPage] = useState<PageResponseSellerProductResponse | null>(null);
+  const [page, setPage] = useState(0);
+  const [loadingProducts, setLoadingProducts] = useState(false);
+
+  const [monthlySalesAmount, setMonthlySalesAmount] = useState(0);
+  const [loadingSales, setLoadingSales] = useState(false);
+
+  const pageSize = 8;
 
   const handleLogout = async () => {
     try {
@@ -40,38 +46,65 @@ export default function SellerDashboardPage({ user: userProp }: Props) {
     }
   };
 
-  // 더미 데이터 (조회 API 생기면 교체)
-  const products: ProductRow[] = useMemo(
-    () => [
-      { id: 1, name: "상품명1", price: 11000, stock: 23, createdAt: "2025.12.06" },
-      { id: 2, name: "상품명2", price: 11000, stock: 23, createdAt: "2025.12.06" },
-      { id: 3, name: "상품명3", price: 11000, stock: 23, createdAt: "2025.12.06" },
-      { id: 4, name: "상품명4", price: 11000, stock: 23, createdAt: "2025.12.06" },
-      { id: 5, name: "상품명5", price: 11000, stock: 23, createdAt: "2025.12.06" },
-      { id: 6, name: "상품명6", price: 11000, stock: 23, createdAt: "2025.12.06" },
-      { id: 7, name: "상품명7", price: 11000, stock: 23, createdAt: "2025.12.06" },
-      { id: 8, name: "상품명8", price: 11000, stock: 23, createdAt: "2025.12.06" },
-      { id: 9, name: "상품명9", price: 11000, stock: 23, createdAt: "2025.12.06" },
-      { id: 10, name: "상품명10", price: 11000, stock: 23, createdAt: "2025.12.06" },
-      { id: 11, name: "상품명11", price: 11000, stock: 23, createdAt: "2025.12.06" },
-      { id: 12, name: "상품명12", price: 11000, stock: 23, createdAt: "2025.12.06" },
-    ],
-    []
-  );
-
-  const totalProducts = products.length;
-  const monthlySales = 1926000;
-
   const formatWon = (n: number) => `${new Intl.NumberFormat("ko-KR").format(n)}원`;
 
-  const pageSize = 8;
-  const totalPages = Math.max(1, Math.ceil(products.length / pageSize));
-  const [page, setPage] = useState(1);
+  useEffect(() => {
+    if (!user.isLoggedIn || user.userType !== "SELLER") {
+      navigate("/", { replace: true });
+      return;
+    }
 
-  const pageItems = useMemo(() => {
-    const start = (page - 1) * pageSize;
-    return products.slice(start, start + pageSize);
-  }, [page, products]);
+    const fetchSales = async () => {
+      setLoadingSales(true);
+      try {
+        const now = new Date();
+        const res = await getSellerMonthlySales({ year: now.getFullYear(), month: now.getMonth() + 1 });
+        if (res.data.success) setMonthlySalesAmount(res.data.data.totalSalesAmount ?? 0);
+      } catch (e) {
+        console.error("monthly sales failed:", e);
+      } finally {
+        setLoadingSales(false);
+      }
+    };
+
+    fetchSales();
+  }, [navigate, user.isLoggedIn, user.userType]);
+
+  useEffect(() => {
+    if (!user.isLoggedIn || user.userType !== "SELLER") return;
+
+    const fetchProducts = async () => {
+      setLoadingProducts(true);
+      try {
+        const res = await getSellerDashboardProducts({
+          page,
+          size: pageSize,
+          sortKey: "CREATED_AT",
+          direction: "DESC",
+        });
+
+        if (!res.data.success) {
+          console.error(res.data.message || "products fetch failed");
+          setProductsPage({ items: [], page, size: pageSize, totalElements: 0, totalPages: 1, hasNext: false });
+          return;
+        }
+
+        setProductsPage(res.data.data);
+      } catch (e) {
+        console.error("products fetch failed:", e);
+        setProductsPage({ items: [], page, size: pageSize, totalElements: 0, totalPages: 1, hasNext: false });
+      } finally {
+        setLoadingProducts(false);
+      }
+    };
+
+    fetchProducts();
+  }, [page, user.isLoggedIn, user.userType]);
+
+  const totalProducts = productsPage?.totalElements ?? productsPage?.items.length ?? 0;
+  const totalPages = Math.max(1, productsPage?.totalPages ?? 1);
+
+  const pageItems = useMemo(() => productsPage?.items ?? [], [productsPage]);
 
   const handleGoCreate = () => {
     navigate("/seller/product/new");
@@ -100,7 +133,9 @@ export default function SellerDashboardPage({ user: userProp }: Props) {
                 <BsBarChartLineFill size={44} />
               </div>
               <div className="sdStatLabel">이번 달 매출</div>
-              <div className="sdStatValue sdStatValue--sales">{formatWon(monthlySales)}</div>
+              <div className="sdStatValue sdStatValue--sales">
+                {loadingSales ? "불러오는 중..." : formatWon(monthlySalesAmount)}
+              </div>
             </div>
           </div>
 
@@ -122,14 +157,24 @@ export default function SellerDashboardPage({ user: userProp }: Props) {
                 </tr>
               </thead>
               <tbody>
-                {pageItems.map((p) => (
-                  <tr key={p.id}>
-                    <td>{p.name}</td>
-                    <td>{new Intl.NumberFormat("ko-KR").format(p.price)}</td>
-                    <td>{p.stock}</td>
-                    <td>{p.createdAt}</td>
+                {loadingProducts ? (
+                  <tr>
+                    <td colSpan={4}>불러오는 중...</td>
                   </tr>
-                ))}
+                ) : pageItems.length === 0 ? (
+                  <tr>
+                    <td colSpan={4}>등록된 상품이 없어요</td>
+                  </tr>
+                ) : (
+                  pageItems.map((p) => (
+                    <tr key={p.id}>
+                      <td>{p.productName}</td>
+                      <td>{new Intl.NumberFormat("ko-KR").format(p.price)}</td>
+                      <td>{p.stockQuantity}</td>
+                      <td>-</td>
+                    </tr>
+                  ))
+                )}
               </tbody>
             </table>
           </div>
@@ -139,8 +184,9 @@ export default function SellerDashboardPage({ user: userProp }: Props) {
               <button
                 key={n}
                 type="button"
-                className={`sdPageBtn ${n === page ? "is-active" : ""}`}
-                onClick={() => setPage(n)}
+                className={`sdPageBtn ${n - 1 === page ? "is-active" : ""}`}
+                onClick={() => setPage(n - 1)}
+                disabled={loadingProducts}
               >
                 {n}
               </button>

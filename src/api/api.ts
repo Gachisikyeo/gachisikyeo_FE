@@ -107,44 +107,70 @@ function isAuthEndpoint(url: string) {
   );
 }
 
+function isOAuthRedirectCors(error: AxiosError) {
+  const anyErr = error as any;
+  const responseURL: string | undefined = anyErr?.request?.responseURL || anyErr?.response?.request?.responseURL;
+
+  if (typeof responseURL === "string") {
+    if (responseURL.includes("accounts.google.com")) return true;
+    if (responseURL.includes("/oauth2/authorization/")) return true;
+  }
+
+  const status = error.response?.status;
+  if (status && [302, 303, 307, 308].includes(status)) return true;
+
+  return false;
+}
+
+async function handleAuthRefreshRetry(
+  client: typeof api | typeof multipartApi,
+  error: AxiosError,
+  original: AxiosRequestConfig & { _retry?: boolean }
+) {
+  const status = error.response?.status;
+  const url = String(original.url ?? "");
+
+  const shouldTry = !original._retry && !isAuthEndpoint(url) && (status === 401 || isOAuthRedirectCors(error));
+  if (!shouldTry) throw error;
+
+  original._retry = true;
+
+  if (isRefreshing) {
+    return await new Promise((resolve, reject) => {
+      refreshQueue.push((token) => {
+        if (!token) return reject(error);
+        setAuthHeader(original, token);
+        resolve((client as any)(original));
+      });
+    });
+  }
+
+  isRefreshing = true;
+  try {
+    const newToken = await refreshAccessToken();
+    flushQueue(newToken);
+    setAuthHeader(original, newToken);
+    return await (client as any)(original);
+  } catch (e) {
+    flushQueue(null);
+    clearAuth();
+    throw e;
+  } finally {
+    isRefreshing = false;
+  }
+}
+
 api.interceptors.response.use(
   (res) => res,
   async (error: AxiosError) => {
     const original = error.config as (AxiosRequestConfig & { _retry?: boolean }) | undefined;
     if (!original) return Promise.reject(error);
 
-    const status = error.response?.status;
-    const url = String(original.url ?? "");
-
-    if (status === 401 && !original._retry && !isAuthEndpoint(url)) {
-      original._retry = true;
-
-      if (isRefreshing) {
-        return new Promise((resolve, reject) => {
-          refreshQueue.push((token) => {
-            if (!token) return reject(error);
-            setAuthHeader(original, token);
-            resolve(api(original));
-          });
-        });
-      }
-
-      isRefreshing = true;
-      try {
-        const newToken = await refreshAccessToken();
-        flushQueue(newToken);
-        setAuthHeader(original, newToken);
-        return api(original);
-      } catch (e) {
-        flushQueue(null);
-        clearAuth();
-        return Promise.reject(e);
-      } finally {
-        isRefreshing = false;
-      }
+    try {
+      return await handleAuthRefreshRetry(api, error, original);
+    } catch (e) {
+      return Promise.reject(e);
     }
-
-    return Promise.reject(error);
   }
 );
 
@@ -154,38 +180,11 @@ multipartApi.interceptors.response.use(
     const original = error.config as (AxiosRequestConfig & { _retry?: boolean }) | undefined;
     if (!original) return Promise.reject(error);
 
-    const status = error.response?.status;
-    const url = String(original.url ?? "");
-
-    if (status === 401 && !original._retry && !isAuthEndpoint(url)) {
-      original._retry = true;
-
-      if (isRefreshing) {
-        return new Promise((resolve, reject) => {
-          refreshQueue.push((token) => {
-            if (!token) return reject(error);
-            setAuthHeader(original, token);
-            resolve(multipartApi(original));
-          });
-        });
-      }
-
-      isRefreshing = true;
-      try {
-        const newToken = await refreshAccessToken();
-        flushQueue(newToken);
-        setAuthHeader(original, newToken);
-        return multipartApi(original);
-      } catch (e) {
-        flushQueue(null);
-        clearAuth();
-        return Promise.reject(e);
-      } finally {
-        isRefreshing = false;
-      }
+    try {
+      return await handleAuthRefreshRetry(multipartApi, error, original);
+    } catch (e) {
+      return Promise.reject(e);
     }
-
-    return Promise.reject(error);
   }
 );
 
@@ -268,16 +267,8 @@ export const createBusinessInfo = (data: BusinessInfoRequest) => {
   return api.post<ApiResponseTemplate<BusinessInfoResponse>>("/api/business-info", data);
 };
 
-export const getMyBusinessInfo = async () => {
-  try {
-    return await api.get<ApiResponseTemplate<BusinessInfoResponse>>("/api/business-info/me");
-  } catch (e: any) {
-    const status = e?.response?.status;
-    if (status === 404 || status === 405) {
-      return api.get<ApiResponseTemplate<BusinessInfoResponse>>("/api/business-info");
-    }
-    throw e;
-  }
+export const getMyBusinessInfo = () => {
+  return api.get<ApiResponseTemplate<BusinessInfoResponse>>("/api/business-info/me");
 };
 
 export const uploadFiles = (files: File[]) => {
@@ -332,13 +323,16 @@ export type ProductCreateRequest = {
   price: number;
   stockQuantity: number;
   unitQuantity: number;
-  imageUrl: string;
   descriptionTitle?: string;
   description?: string;
 };
 
-export const createProduct = (data: ProductCreateRequest) => {
-  return api.post<ApiResponseTemplate<any>>("/api/products", data);
+export const createProduct = (data: ProductCreateRequest, image: File) => {
+  const formData = new FormData();
+  formData.append("data", JSON.stringify(data));
+  formData.append("image", image);
+
+  return multipartApi.post<ApiResponseTemplate<any>>("/api/products", formData);
 };
 
 export type GroupPurchaseCreateRequest = {
@@ -423,11 +417,17 @@ export const getMypageProfile = () => {
 };
 
 export const getMypageParticipationsOngoing = (params: { page?: number; size?: number }) => {
-  return api.get<ApiResponseTemplate<SliceResponse<MyParticipationGroupPurchaseDto>>>("/api/mypage/participations/ongoing", { params });
+  return api.get<ApiResponseTemplate<SliceResponse<MyParticipationGroupPurchaseDto>>>(
+    "/api/mypage/participations/ongoing",
+    { params }
+  );
 };
 
 export const getMypageParticipationsCompleted = (params: { page?: number; size?: number }) => {
-  return api.get<ApiResponseTemplate<SliceResponse<MyParticipationGroupPurchaseDto>>>("/api/mypage/participations/completed", { params });
+  return api.get<ApiResponseTemplate<SliceResponse<MyParticipationGroupPurchaseDto>>>(
+    "/api/mypage/participations/completed",
+    { params }
+  );
 };
 
 export const getMypageMain = async (params?: { completed?: boolean; ongoing?: boolean }) => {
@@ -451,14 +451,66 @@ export const getMypageMain = async (params?: { completed?: boolean; ongoing?: bo
       email: profile.email,
       lawDong: profile.lawDong,
       userType: profile.userType,
-      completedGroupPurchases: wantCompleted ? ({ content: completedItems } as PageResponse<MypageGroupPurchaseDto>) : undefined,
-      ongoingGroupPurchases: wantOngoing ? ({ content: ongoingItems } as PageResponse<MypageGroupPurchaseDto>) : undefined,
+      completedGroupPurchases: wantCompleted
+        ? ({ content: completedItems } as PageResponse<MypageGroupPurchaseDto>)
+        : undefined,
+      ongoingGroupPurchases: wantOngoing
+        ? ({ content: ongoingItems } as PageResponse<MypageGroupPurchaseDto>)
+        : undefined,
     } as MypageResponseDto,
   };
 };
 
 export const getMypageCompletedDetail = (participationId: number) => {
   return api.get<ApiResponseTemplate<CompletedGroupPurchaseDetailDto>>(`/api/mypage/completed/${participationId}`);
+};
+
+export type SellerDashboardResponse = {
+  totalSoldQuantity: number;
+};
+
+export const getSellerTotalSoldQuantity = () => {
+  return api.get<ApiResponseTemplate<SellerDashboardResponse>>("/api/seller/dashboard/sales");
+};
+
+export type SellerProductResponse = {
+  id: number;
+  productName: string;
+  price: number;
+  stockQuantity: number;
+  imageUrl: string;
+  unitQuantity: number;
+  unitPrice: number;
+};
+
+export type PageResponseSellerProductResponse = {
+  items: SellerProductResponse[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  hasNext: boolean;
+};
+
+export type SellerProductSortKey = "ID" | "CREATED_AT" | "UPDATED_AT";
+export type SortDirection = "ASC" | "DESC";
+
+export const getSellerDashboardProducts = (params?: {
+  page?: number;
+  size?: number;
+  sortKey?: SellerProductSortKey;
+  direction?: SortDirection;
+}) => {
+  return api.get<ApiResponseTemplate<PageResponseSellerProductResponse>>("/api/seller/dashboard/products", { params });
+};
+
+export type MonthlySalesResponse = {
+  yearMonth: string;
+  totalSalesAmount: number;
+};
+
+export const getSellerMonthlySales = (params: { year: number; month: number }) => {
+  return api.get<ApiResponseTemplate<MonthlySalesResponse>>("/api/seller/dashboard/monthly-sales", { params });
 };
 
 export default api;

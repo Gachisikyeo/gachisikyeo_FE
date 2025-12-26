@@ -7,7 +7,7 @@ import Header from "../../components/Header";
 import CategoryNav from "../../components/CategoryNav";
 
 import { clearAuth, getAuthUser, type AuthUser } from "../../auth/authStorage";
-import { createProduct, logout, type ProductCategory, uploadFiles } from "../../api/api";
+import { createProduct, logout, type ProductCategory } from "../../api/api";
 
 import "./SellerProductCreatePage.css";
 
@@ -23,14 +23,13 @@ export default function SellerProductCreatePage() {
   const [description, setDescription] = useState("");
 
   const [imagePreview, setImagePreview] = useState<string>("");
-  const [imageUrl, setImageUrl] = useState<string>("");
+  const [imageFile, setImageFile] = useState<File | null>(null);
 
-  const [uploading, setUploading] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
-    // 필요하면 SELLER만 접근 제한 가능
+    // SELLER만 접근 제한 가능
     // if (!user.isLoggedIn || user.userType !== "SELLER") navigate("/");
   }, [user, navigate]);
 
@@ -52,33 +51,12 @@ export default function SellerProductCreatePage() {
     setCategory((prev) => (prev === value ? "" : value));
   };
 
-  const handleFileChange = async (file: File | null) => {
+  const handleFileChange = (file: File | null) => {
     if (!file) return;
 
     const localUrl = URL.createObjectURL(file);
     setImagePreview(localUrl);
-
-    setUploading(true);
-    try {
-      const res = await uploadFiles([file]);
-
-      if (!res.data.success) {
-        throw new Error(res.data.message || "파일 업로드 실패");
-      }
-
-      const list = res.data?.data ?? [];
-      const first = list[0] ?? "";
-
-      if (!first) throw new Error("Empty upload result");
-      setImageUrl(first);
-    } catch (e: any) {
-      console.error(e);
-      alert(e?.message || "이미지 업로드에 실패했어 ㅠㅠ");
-      setImagePreview("");
-      setImageUrl("");
-    } finally {
-      setUploading(false);
-    }
+    setImageFile(file);
   };
 
   const validate = () => {
@@ -87,7 +65,7 @@ export default function SellerProductCreatePage() {
     if (!price || Number(price) <= 0) return "판매가를 제대로 입력해줘!";
     if (stockQuantity === "" || Number(stockQuantity) < 0) return "재고수량을 제대로 입력해주세요";
     if (!unitQuantity || Number(unitQuantity) <= 0) return "구성수량을 제대로 입력해주세요";
-    if (!imageUrl) return "대표 이미지(필수)를 등록해주세요";
+    if (!imageFile) return "대표 이미지(필수)를 등록해주세요";
     if (!description.trim()) return "상세 정보를 입력해주세요";
     return "";
   };
@@ -101,16 +79,18 @@ export default function SellerProductCreatePage() {
 
     setSubmitting(true);
     try {
-      const res = await createProduct({
-        category: category as ProductCategory,
-        productName: productName.trim(),
-        price: Number(price),
-        stockQuantity: Number(stockQuantity),
-        unitQuantity: Number(unitQuantity),
-        imageUrl,
-        descriptionTitle: productName.trim(),
-        description: description.trim(),
-      });
+      const res = await createProduct(
+        {
+          category: category as ProductCategory,
+          productName: productName.trim(),
+          price: Number(price),
+          stockQuantity: Number(stockQuantity),
+          unitQuantity: Number(unitQuantity),
+          descriptionTitle: productName.trim(),
+          description: description.trim(),
+        },
+        imageFile as File
+      );
 
       if (!res.data.success) {
         alert(res.data.message || "상품 등록 실패");
@@ -249,11 +229,11 @@ export default function SellerProductCreatePage() {
                         e.stopPropagation();
                         handlePickFile();
                       }}
-                      disabled={uploading}
+                      disabled={submitting}
                     >
-                      {uploading ? "업로드 중..." : "파일 선택"}
+                      파일 선택
                     </button>
-                    {imageUrl && !uploading && <div className="spcUploaded">업로드 완료</div>}
+                    {imageFile && <div className="spcUploaded">선택 완료</div>}
                   </div>
                 </div>
 
@@ -289,7 +269,7 @@ export default function SellerProductCreatePage() {
               className="spcSubmitBtn"
               type="button"
               onClick={handleSubmit}
-              disabled={uploading || submitting}
+              disabled={submitting}
             >
               {submitting ? "등록 중..." : "상품 등록하기"}
             </button>

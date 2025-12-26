@@ -6,8 +6,6 @@ import { useNavigate } from "react-router-dom";
 import { getAuthUser } from "../../auth/authStorage";
 import { getMyBusinessInfo } from "../../api/api";
 
-const SELLER_BIZ_DONE_KEY = "sellerBusinessInfoRegistered";
-
 function SellerEntry() {
   const navigate = useNavigate();
 
@@ -15,31 +13,28 @@ function SellerEntry() {
     const run = async () => {
       const user = getAuthUser();
 
-      if (!user?.isLoggedIn) {
-        navigate("/", { replace: true });
-        return;
-      }
-
-      if (user.userType !== "SELLER") {
+      if (!user.isLoggedIn || user.userType !== "SELLER") {
         navigate("/", { replace: true });
         return;
       }
 
       try {
-        const res = await getMyBusinessInfo();
+        await getMyBusinessInfo();
+        navigate("/seller/dashboard", { replace: true });
+      } catch (e: any) {
+        const status = e?.response?.status;
 
-        if (res?.data?.success && res.data.data?.id) {
-          navigate("/seller/dashboard", { replace: true });
+        if (status === 404) {
+          navigate("/seller/auth", { replace: true });
+          return;
+        }
+
+        if (status === 401 || status === 403) {
+          navigate("/", { replace: true });
           return;
         }
 
         navigate("/seller/auth", { replace: true });
-        return;
-      } catch (e: any) {
-        
-        const isDone = localStorage.getItem(SELLER_BIZ_DONE_KEY) === "true";
-        if (isDone) navigate("/seller/dashboard", { replace: true });
-        else navigate("/seller/auth", { replace: true });
       }
     };
 
