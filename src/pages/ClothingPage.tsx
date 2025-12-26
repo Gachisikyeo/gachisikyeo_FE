@@ -1,4 +1,4 @@
-// src/pages/ClothingPage.tsx
+// // src/pages/ClothingPage.tsx
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
@@ -7,26 +7,54 @@ import ProductSection from "../components/ProductSection";
 
 import type { Product } from "../components/ProductCard";
 import { clearAuth, getAuthUser, type AuthUser } from "../auth/authStorage";
-import { logout } from "../api/api";
+import { getProductsByCategory, logout, type ProductListResponse } from "../api/api";
 
-import G1 from "../assets/ex/G1.png";
-import G2 from "../assets/ex/G2.png";
-import G3 from "../assets/ex/G3.png";
-import G4 from "../assets/ex/G4.png";
+function toCardProduct(p: ProductListResponse): Product {
+  const unitPrice = p.unitPrice ?? (p.unitQuantity ? Math.ceil(p.price / p.unitQuantity) : p.price);
 
-const base: Product[] = [
-  { id: 101, title: "의류 샘플 1", imageUrl: G1, minOrderQty: 1, singlePurchasePrice: 15000, priceFrom: 7000 },
-  { id: 102, title: "의류 샘플 2", imageUrl: G2, minOrderQty: 1, singlePurchasePrice: 20000, priceFrom: 9000 },
-  { id: 103, title: "의류 샘플 3", imageUrl: G3, minOrderQty: 1, singlePurchasePrice: 30000, priceFrom: 12000 },
-  { id: 104, title: "의류 샘플 4", imageUrl: G4, minOrderQty: 1, singlePurchasePrice: 10000, priceFrom: 5000 },
-];
+  return {
+    id: p.id,
+    title: p.productName,
+    imageUrl: p.imageUrl,
+    minOrderQty: 1,
+    singlePurchasePrice: p.price,
+    priceFrom: unitPrice,
+  };
+}
 
 function ClothingPage() {
   const [user, setUser] = useState<AuthUser>(() => getAuthUser());
   const navigate = useNavigate();
 
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(false);
+
   useEffect(() => {
     setUser(getAuthUser());
+  }, []);
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      setLoading(true);
+      try {
+        const res = await getProductsByCategory("CLOTHES", {
+          page: 0,
+          size: 12,
+          sortKey: "CREATED_AT",
+          direction: "DESC",
+        });
+
+        const items = res.data.data.items ?? [];
+        setProducts(items.map(toCardProduct));
+      } catch (e) {
+        console.error("clothes products fetch failed:", e);
+        setProducts([]);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchProducts();
   }, []);
 
   const handleLogout = async () => {
@@ -41,13 +69,11 @@ function ClothingPage() {
     }
   };
 
-  const products = useMemo(() => {
-    const expanded = Array.from({ length: 20 }, (_, i) => {
-      const p = base[i % base.length];
-      return { ...p, id: p.id * 100 + i };
-    });
-    return expanded.sort((a, b) => a.priceFrom - b.priceFrom);
-  }, []);
+  const handleClickProduct = (product: Product) => {
+    navigate(`/products/${product.id}`, { state: { product } });
+  };
+
+  const sorted = useMemo(() => [...products].sort((a, b) => a.priceFrom - b.priceFrom), [products]);
 
   return (
     <div>
@@ -55,10 +81,17 @@ function ClothingPage() {
       <CategoryNav user={user} />
 
       <main className="app-layout page-list" style={{ paddingBottom: "40px" }}>
-        <ProductSection title="" products={products} onClickViewMore={() => {}} />
+        <ProductSection
+          title=""
+          products={sorted}
+          onClickViewMore={() => {}}
+          onClickProduct={handleClickProduct}
+        />
+        {loading && <div style={{ padding: "16px" }}>불러오는 중...</div>}
       </main>
     </div>
   );
 }
 
 export default ClothingPage;
+

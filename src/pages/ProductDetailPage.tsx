@@ -11,43 +11,17 @@ import GroupPurchaseJoinModal from "../components/GroupPurchaseJoinModal";
 
 import type { Product } from "../components/ProductCard";
 import { clearAuth, getAuthUser, type AuthUser } from "../auth/authStorage";
-import * as API from "../api/api";
+import {
+  getGroupPurchasesByProductId,
+  getProductById,
+  logout,
+  type GroupPurchaseListItem,
+  type ProductCategory,
+  type ProductDetailDto,
+} from "../api/api";
 
 import { CiDeliveryTruck } from "react-icons/ci";
 import "./ProductDetailPage.css";
-
-// 임시
-const USE_MOCK = true;
-
-type ProductDetailDto = {
-  id: number;
-  productName?: string;
-  price?: number;
-  stockQuantity?: number;
-  imageUrl?: string;
-  unitQuantity?: number;
-  category?: string;
-  descriptionTitle?: string;
-  description?: string;
-  // 임시?
-  eachPrice?: number;
-};
-
-type GroupPurchaseListItem = {
-  id?: number;
-  groupPurchaseId?: number;
-
-  regionId?: number;
-  regionName?: string;
-  hostUserId?: number;
-  userNickName?: string;
-
-  currentQuantity?: number;
-  targetQuantity?: number;
-
-  groupEndAt?: string;
-  status?: string;
-};
 
 function formatWon(value: number) {
   return value.toLocaleString("ko-KR");
@@ -73,6 +47,7 @@ export default function ProductDetailPage() {
 
   const location = useLocation();
   const fallbackProduct = (location.state as any)?.product as Product | undefined;
+  const fallbackCategory = (location.state as any)?.category as ProductCategory | undefined;
 
   const [product, setProduct] = useState<ProductDetailDto | null>(null);
   const [groupPurchases, setGroupPurchases] = useState<GroupPurchaseListItem[]>([]);
@@ -87,19 +62,13 @@ export default function ProductDetailPage() {
 
   const eachPrice = useMemo(() => {
     if (!product) return 0;
-
-    const fromBE = (product as any)?.eachPrice as number | undefined;
-    if (typeof fromBE === "number" && fromBE > 0) return fromBE;
-
     const count = Math.max(1, Number(product.unitQuantity ?? 1));
     return Math.round(Number(product.price ?? 0) / count);
   }, [product]);
 
   const handleLogout = async () => {
     try {
-      // API.logout가 있으면 호출 (없어도 앱 안 죽게)
-      const logoutFn = (API as any).logout as (() => Promise<any>) | undefined;
-      if (logoutFn) await logoutFn();
+      await logout();
     } catch (error) {
       console.error("logout failed:", error);
     } finally {
@@ -115,14 +84,8 @@ export default function ProductDetailPage() {
 
   const reloadGroupPurchases = async () => {
     try {
-      const fn = (API as any).getGroupPurchasesByProductId as ((id: number) => Promise<any>) | undefined;
-      if (!fn) {
-        setGroupPurchases([]);
-        return;
-      }
-
-      const gpRes = await fn(pid);
-      setGroupPurchases(gpRes?.data?.data ?? []);
+      const gpRes = await getGroupPurchasesByProductId(pid);
+      setGroupPurchases(gpRes.data.data ?? []);
     } catch (e) {
       console.error("groupPurchases load failed:", e);
       setGroupPurchases([]);
@@ -132,85 +95,28 @@ export default function ProductDetailPage() {
   useEffect(() => {
     if (!pid || Number.isNaN(pid)) return;
 
-    // 임시 mock
-    if (USE_MOCK) {
-      setProduct({
-        id: pid,
-        productName: "상하키친 포크카레 170g 12팩",
-        price: 12000,
-        stockQuantity: 999,
-        imageUrl: "",
-        unitQuantity: 12,
-        category: "FOOD",
-        descriptionTitle: "상품 설명 타이틀",
-        description: "상세 설명이 들어갈 영역이야.",
-      });
-
-      setGroupPurchases([
-        {
-          id: 1,
-          groupPurchaseId: 1,
-          regionId: 1,
-          regionName: "온수동",
-          hostUserId: 1,
-          userNickName: "닉네임",
-          currentQuantity: 3,
-          targetQuantity: 12,
-          groupEndAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 3).toISOString(),
-          status: "OPEN",
-        },
-        {
-          id: 2,
-          groupPurchaseId: 2,
-          regionId: 1,
-          regionName: "온수동",
-          hostUserId: 2,
-          userNickName: "바보",
-          currentQuantity: 7,
-          targetQuantity: 12,
-          groupEndAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 1).toISOString(),
-          status: "OPEN",
-        },
-        {
-          id: 3,
-          groupPurchaseId: 3,
-          regionId: 2,
-          regionName: "오류동",
-          hostUserId: 3,
-          userNickName: "총대왕",
-          currentQuantity: 1,
-          targetQuantity: 12,
-          groupEndAt: new Date(Date.now() + 1000 * 60 * 60 * 5).toISOString(),
-          status: "OPEN",
-        },
-      ]);
-
-      setIsLoading(false);
-      return;
-    }
-
     const load = async () => {
       setIsLoading(true);
 
       await reloadGroupPurchases();
 
       try {
-        const fn = (API as any).getProductById as ((id: number) => Promise<any>) | undefined;
-        if (!fn) throw new Error("getProductById is not exported in api.ts");
-
-        const prodRes = await fn(pid);
-        setProduct(prodRes?.data?.data ?? null);
+        const prodRes = await getProductById(pid);
+        setProduct(prodRes.data.data ?? null);
       } catch (e) {
         console.warn("product detail api failed -> fallback to route state:", e);
 
         if (fallbackProduct) {
           setProduct({
             id: fallbackProduct.id,
+            category: (fallbackCategory ?? "FOOD") as ProductCategory,
             productName: fallbackProduct.title,
             price: fallbackProduct.singlePurchasePrice,
             stockQuantity: 0,
-            imageUrl: fallbackProduct.imageUrl,
             unitQuantity: 1,
+            imageUrl: fallbackProduct.imageUrl,
+            descriptionTitle: undefined,
+            description: undefined,
           });
         } else {
           setProduct(null);
@@ -221,7 +127,7 @@ export default function ProductDetailPage() {
     };
 
     load();
-  }, [pid, fallbackProduct]);
+  }, [pid, fallbackProduct, fallbackCategory]);
 
   const handleOpenCreateGroupPurchase = () => {
     setIsCreateOpen(true);
@@ -261,7 +167,7 @@ export default function ProductDetailPage() {
             </div>
 
             <div className="product-detail__info">
-              <div className="product-detail__seller">판매자 이름</div>
+              <div className="product-detail__seller">판매자</div>
 
               <div className="product-detail__titleRow">
                 <h1 className="product-detail__title">{product?.productName ?? "상품명"}</h1>
@@ -306,15 +212,17 @@ export default function ProductDetailPage() {
               {groupPurchases.length === 0 && <div className="product-detail__emptyGp">진행중인 공구가 없어요</div>}
 
               {groupPurchases.map((gp) => {
-                const gpId = (gp as any).groupPurchaseId ?? (gp as any).id ?? `${gp.regionName}-${gp.hostUserId}-${gp.groupEndAt}`;
+                const gpId = (gp as any).groupPurchaseId ?? gp.id;
+
                 const current = Number(gp.currentQuantity ?? 0);
                 const target = Number(gp.targetQuantity ?? 0);
+                const host = gp.hostNickName ?? (gp as any).userNickName ?? "-";
 
                 return (
                   <button key={gpId} type="button" className="gp-row" onClick={() => handleClickJoin(gp)}>
                     <div className="gp-row__left">
-                      <div className="gp-row__host">{gp.userNickName ?? "-"}</div>
-                      <div className="gp-row__status">{gp.status === "OPEN" ? "모집중" : "마감"}</div>
+                      <div className="gp-row__host">{host}</div>
+                      <div className="gp-row__status">모집중</div>
                     </div>
 
                     <div className="gp-row__cols">
@@ -348,13 +256,11 @@ export default function ProductDetailPage() {
           <section className="product-detail__descSection">
             <h2 className="product-detail__descTitle">{product?.descriptionTitle ?? "상품 설명"}</h2>
             <p className="product-detail__descText">{product?.description ?? "상품 설명"}</p>
-
-            <div className="product-detail__descImages">{/* 상세 이미지 영역 */}</div>
+            <div className="product-detail__descImages" />
           </section>
         </div>
       </main>
 
-      {/* 공구 등록 모달 */}
       {product && (
         <GPCreateModal
           isOpen={isCreateOpen}
@@ -363,7 +269,6 @@ export default function ProductDetailPage() {
           productName={product.productName}
           packagePrice={product.price}
           packCount={product.unitQuantity ?? 12}
-          eachPriceFromBE={(product as any)?.eachPrice}
           user={user}
           onPaid={(payload: { productId: number; productName: string; totalPrice: number }) => {
             const buyerName = user.nickName ?? user.name ?? "익명";
@@ -382,7 +287,6 @@ export default function ProductDetailPage() {
         />
       )}
 
-      {/* 공구 참여 모달 */}
       {isJoinOpen && product && selectedGp && (
         <GPJoinModal
           isOpen={isJoinOpen}
@@ -396,7 +300,6 @@ export default function ProductDetailPage() {
           productName={product.productName}
           packagePrice={product.price}
           packCount={product.unitQuantity ?? 1}
-          eachPriceFromBE={(product as any)?.eachPrice as number | undefined}
           onPaid={(payload: {
             productId: number;
             productName: string;

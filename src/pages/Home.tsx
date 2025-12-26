@@ -2,7 +2,7 @@
 // src/pages/Home.tsx
 import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
-import { logout } from "../api/api";
+import { getPopularProducts, getProducts, logout, type ProductListResponse, type PopularProductResponse } from "../api/api";
 
 import Header from "../components/Header";
 import CategoryNav from "../components/CategoryNav";
@@ -12,37 +12,74 @@ import ProductSection from "../components/ProductSection";
 import type { Product } from "../components/ProductCard";
 import { clearAuth, getAuthUser, type AuthUser } from "../auth/authStorage";
 
-import G1 from "../assets/ex/G1.png";
-import G2 from "../assets/ex/G2.png";
-import G3 from "../assets/ex/G3.png";
-import G4 from "../assets/ex/G4.png";
-import G5 from "../assets/ex/G5.png";
-import G6 from "../assets/ex/G6.png";
-import G7 from "../assets/ex/G7.png";
-import G8 from "../assets/ex/G8.png";
+function toCardProductFromList(p: ProductListResponse): Product {
+  const unitPrice = p.unitPrice ?? (p.unitQuantity ? Math.ceil(p.price / p.unitQuantity) : p.price);
 
-// 현재 인기있는 상품
-const popularProducts: Product[] = [
-  { id: 1, title: "상하키친 포크카레 170g 12팩", imageUrl: G1, minOrderQty: 3, singlePurchasePrice: 16000, priceFrom: 4000 },
-  { id: 2, title: "핫타임 핫팩 군용 200매", imageUrl: G2, minOrderQty: 10, singlePurchasePrice: 64000, priceFrom: 3200 },
-  { id: 3, title: "샤인머스켓 4kg (4송이)", imageUrl: G3, minOrderQty: 1, singlePurchasePrice: 20000, priceFrom: 5000 },
-  { id: 4, title: "아침의 쑥떡 40개입", imageUrl: G4, minOrderQty: 5, singlePurchasePrice: 56000, priceFrom: 7000 },
-];
+  return {
+    id: p.id,
+    title: p.productName,
+    imageUrl: p.imageUrl,
+    minOrderQty: 1,
+    singlePurchasePrice: p.price,
+    priceFrom: unitPrice,
+  };
+}
 
-// 최근 올라온 공동구매 제안
-const recentProducts: Product[] = [
-  { id: 5, title: "카누 미니 마일드 로스트 아메리카노", imageUrl: G5, minOrderQty: 20, singlePurchasePrice: 27000, priceFrom: 5400 },
-  { id: 6, title: "소화가 잘되는 우유 190ml 48팩", imageUrl: G6, minOrderQty: 6, singlePurchasePrice: 38000, priceFrom: 4750 },
-  { id: 7, title: "코카콜라 제로 캔 350ml 24개입", imageUrl: G7, minOrderQty: 6, singlePurchasePrice: 21000, priceFrom: 5250 },
-  { id: 8, title: "햇반 황금 백미 210g 36개", imageUrl: G8, minOrderQty: 6, singlePurchasePrice: 36300, priceFrom: 6050 },
-];
+function toCardProductFromPopular(p: PopularProductResponse): Product {
+  return {
+    id: p.productId,
+    title: p.productName,
+    imageUrl: p.imageUrl,
+    minOrderQty: 1,
+    singlePurchasePrice: p.price,
+    priceFrom: p.price,
+  };
+}
 
 function Home() {
   const [user, setUser] = useState<AuthUser>(() => getAuthUser());
   const navigate = useNavigate();
 
+  const [popularProducts, setPopularProducts] = useState<Product[]>([]);
+  const [recentProducts, setRecentProducts] = useState<Product[]>([]);
+  const [loadingPopular, setLoadingPopular] = useState(false);
+  const [loadingRecent, setLoadingRecent] = useState(false);
+
   useEffect(() => {
     setUser(getAuthUser());
+  }, []);
+
+  useEffect(() => {
+    const fetchPopular = async () => {
+      setLoadingPopular(true);
+      try {
+        const res = await getPopularProducts({ page: 0, size: 4 });
+        const items = res.data.data.items ?? [];
+        setPopularProducts(items.map(toCardProductFromPopular));
+      } catch (e) {
+        console.error("popular products fetch failed:", e);
+        setPopularProducts([]);
+      } finally {
+        setLoadingPopular(false);
+      }
+    };
+
+    const fetchRecent = async () => {
+      setLoadingRecent(true);
+      try {
+        const res = await getProducts({ page: 0, size: 4, sortKey: "CREATED_AT", direction: "DESC" });
+        const items = res.data.data.items ?? [];
+        setRecentProducts(items.map(toCardProductFromList));
+      } catch (e) {
+        console.error("recent products fetch failed:", e);
+        setRecentProducts([]);
+      } finally {
+        setLoadingRecent(false);
+      }
+    };
+
+    fetchPopular();
+    fetchRecent();
   }, []);
 
   const handleClickPopularMore = () => navigate("/popular");
@@ -61,9 +98,8 @@ function Home() {
   };
 
   const handleClickProduct = (product: Product) => {
-    navigate(`/products/${product.id}`, { state: { product } }); 
+    navigate(`/products/${product.id}`, { state: { product } });
   };
-
 
   return (
     <div>
@@ -80,6 +116,7 @@ function Home() {
           showMinOrderQty={false}
           onClickProduct={handleClickProduct}
         />
+        {loadingPopular && <div style={{ padding: "16px" }}>불러오는 중...</div>}
 
         <ProductSection
           title="최근 올라온 공동구매 제안"
@@ -87,11 +124,11 @@ function Home() {
           onClickViewMore={handleClickRecentMore}
           showMinOrderQty={true}
           onClickProduct={handleClickProduct}
-          />
+        />
+        {loadingRecent && <div style={{ padding: "16px" }}>불러오는 중...</div>}
       </main>
     </div>
   );
-  
 }
 
 export default Home;
