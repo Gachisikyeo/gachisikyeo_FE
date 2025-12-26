@@ -107,7 +107,7 @@ function SellerAuthPage() {
     setErrorMsg("");
 
     if (!canSubmit) {
-      setErrorMsg("입력/인증/약관동의를 모두 완료해줘!");
+      setErrorMsg("입력/인증/약관동의를 모두 완료해주세요");
       return;
     }
 
@@ -127,7 +127,6 @@ function SellerAuthPage() {
         return;
       }
 
-      // ✅ “성공했을 때만” 등록 완료 플래그
       localStorage.setItem(SELLER_BIZ_DONE_KEY, "true");
       localStorage.setItem(SELLER_BIZ_DATA_KEY, JSON.stringify(res.data.data));
 

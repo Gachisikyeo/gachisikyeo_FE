@@ -29,7 +29,6 @@ export default function SellerProductCreatePage() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   useEffect(() => {
-    // SELLER만 접근 제한 가능
     // if (!user.isLoggedIn || user.userType !== "SELLER") navigate("/");
   }, [user, navigate]);
 
@@ -62,7 +61,7 @@ export default function SellerProductCreatePage() {
   const validate = () => {
     if (!category) return "카테고리를 선택해주세요";
     if (!productName.trim()) return "상품명을 입력해주세요";
-    if (!price || Number(price) <= 0) return "판매가를 제대로 입력해줘!";
+    if (!price || Number(price) <= 0) return "판매가를 제대로 입력해주세요";
     if (stockQuantity === "" || Number(stockQuantity) < 0) return "재고수량을 제대로 입력해주세요";
     if (!unitQuantity || Number(unitQuantity) <= 0) return "구성수량을 제대로 입력해주세요";
     if (!imageFile) return "대표 이미지(필수)를 등록해주세요";
@@ -97,7 +96,6 @@ export default function SellerProductCreatePage() {
         return;
       }
 
-      alert("상품 등록 완료");
       navigate("/seller/product/complete");
     } catch (e: any) {
       console.error(e);

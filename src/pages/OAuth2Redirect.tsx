@@ -40,22 +40,18 @@ export default function OAuth2Redirect() {
     const accessToken = getParamFromSearchOrHash("accessToken");
     const refreshToken = getParamFromSearchOrHash("refreshToken");
 
-    // ✅ 1) 신규 유저: oauth2SignupToken을 받고 구글 회원가입 페이지로 이동
     if (oauth2SignupToken) {
       setOAuth2SignupToken(oauth2SignupToken);
 
-      // URL 토큰 흔적 제거
       window.history.replaceState({}, document.title, window.location.pathname);
 
       navigate("/signup/google");
       return;
     }
 
-    // ✅ 2) 기존 유저: access/refresh 토큰 저장 후 홈으로
     if (accessToken && refreshToken) {
       saveTokens(accessToken, refreshToken);
 
-      // 가능하면 accessToken(JWT)에서 유저 기본정보 뽑아서 저장 (백엔드가 user를 URL로 안 줘도 최소한 유지됨)
       const payload = decodeJwtPayload(accessToken) ?? {};
 
       saveAuthUser({
@@ -76,8 +72,7 @@ export default function OAuth2Redirect() {
       return;
     }
 
-    // ✅ 둘 다 없으면 백엔드 리다이렉트 파라미터가 예상과 다른 것
-    setMsg("구글 로그인 정보를 찾지 못했어 😭 백엔드 리다이렉트 파라미터를 확인해야 해.");
+    setMsg("구글 로그인 정보를 찾지 못함");
   }, [navigate]);
 
   return (

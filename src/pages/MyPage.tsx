@@ -159,7 +159,6 @@ export default function MyPage() {
     }
   };
 
-  // ✅ 화면 표시에 쓸 값들
   const nickNameValue = profile?.nickname ?? (user as any).nickName ?? "-";
   const emailValue = profile?.email ?? (user as any).email ?? "-";
   const regionValue = profile?.lawDong ?? (user as any).lawDong?.dong ?? "위치 미설정";
@@ -227,7 +226,6 @@ export default function MyPage() {
         <div className="mypageWrap">
           <section className="mypage__userPanel">
             <div className="mypage__userGrid">
-              {/* ✅ 왼쪽: 닉네임 / 이메일 */}
               <div className="mypage__col mypage__col--left">
                 <div className="mypage__field">
                   <div className="mypage__label">닉네임</div>
@@ -246,7 +244,6 @@ export default function MyPage() {
                 </div>
               </div>
 
-              {/* ✅ 오른쪽: 지역 / 유저타입(이름 대신) */}
               <div className="mypage__col mypage__col--right">
                 <div className="mypage__field">
                   <div className="mypage__label">지역</div>

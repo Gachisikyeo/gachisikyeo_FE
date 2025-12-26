@@ -172,7 +172,7 @@ export default function AddressModal({ isOpen, onClose, onConfirm }: Props) {
 
       const status = e?.response?.status;
       if (status === 404) {
-        alert("선택한 지역을 찾을 수 없어요. 다른 동을 선택해줘!");
+        alert("선택한 지역을 찾을 수 없어요");
       } else {
         alert("지역 정보를 확정하지 못했어요");
       }

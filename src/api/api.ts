@@ -298,6 +298,66 @@ export type ProductDetailDto = {
 export const getProductById = (productId: number) => {
   return plain.get<ApiResponseTemplate<ProductDetailDto>>(`/api/products/${productId}`);
 };
+//여기부터
+export type ProductSortKey = "CREATED_AT" | "VIEW_COUNT" | "PRICE";
+
+export type ProductListResponse = {
+  id: number;
+  productName: string;
+  price: number;
+  stockQuantity: number;
+  imageUrl: string;
+  unitQuantity: number;
+  unitPrice: number;
+};
+
+export type PageSliceResponse<T> = {
+  items: T[];
+  page: number;
+  size: number;
+  totalElements: number;
+  totalPages: number;
+  hasNext: boolean;
+};
+
+export const getProducts = (params?: {
+  page?: number;
+  size?: number;
+  sortKey?: ProductSortKey;
+  direction?: SortDirection;
+}) => {
+  return plain.get<ApiResponseTemplate<PageSliceResponse<ProductListResponse>>>("/api/products", { params });
+};
+
+export const getProductsByCategory = (
+  category: ProductCategory,
+  params?: {
+    page?: number;
+    size?: number;
+    sortKey?: ProductSortKey;
+    direction?: SortDirection;
+  }
+) => {
+  return plain.get<ApiResponseTemplate<PageSliceResponse<ProductListResponse>>>("/api/products/category", {
+    params: { category, ...(params ?? {}) },
+  });
+};
+
+export type PopularProductResponse = {
+  productId: number;
+  productName: string;
+  price: number;
+  imageUrl: string;
+  storeName?: string;
+};
+
+export const getPopularProducts = (params?: { page?: number; size?: number }) => {
+  return plain.get<ApiResponseTemplate<PageSliceResponse<PopularProductResponse>>>("/api/products/popular", { params });
+};
+// 일단여기까지
+
+
+
 
 export type GroupPurchaseListItem = {
   id: number;
@@ -334,6 +394,17 @@ export const createProduct = (data: ProductCreateRequest, image: File) => {
 
   return multipartApi.post<ApiResponseTemplate<any>>("/api/products", formData);
 };
+
+// export const createProduct = (data: ProductCreateRequest, image: File) => {
+//   const formData = new FormData();
+//   formData.append(
+//     "data",
+//     new Blob([JSON.stringify(data)], { type: "application/json" })
+//   );
+//   formData.append("image", image);
+//   return multipartApi.post<ApiResponseTemplate<any>>("/api/products", formData);
+// };
+
 
 export type GroupPurchaseCreateRequest = {
   regionId: number;
@@ -473,15 +544,27 @@ export const getSellerTotalSoldQuantity = () => {
   return api.get<ApiResponseTemplate<SellerDashboardResponse>>("/api/seller/dashboard/sales");
 };
 
+// export type SellerProductResponse = {
+//   id: number;
+//   productName: string;
+//   price: number;
+//   stockQuantity: number;
+//   imageUrl: string;
+//   unitQuantity: number;
+//   unitPrice: number;
+// };
+
 export type SellerProductResponse = {
-  id: number;
+  productId: number;
   productName: string;
   price: number;
-  stockQuantity: number;
-  imageUrl: string;
-  unitQuantity: number;
-  unitPrice: number;
+  stock: number;
+  createdAt: string;
 };
+
+export type SellerProductSortKey = "CREATED_AT" | "PRICE" | "STOCK_QUANTITY";
+export type SortDirection = "ASC" | "DESC";
+
 
 export type PageResponseSellerProductResponse = {
   items: SellerProductResponse[];
@@ -492,8 +575,8 @@ export type PageResponseSellerProductResponse = {
   hasNext: boolean;
 };
 
-export type SellerProductSortKey = "ID" | "CREATED_AT" | "UPDATED_AT";
-export type SortDirection = "ASC" | "DESC";
+// export type SellerProductSortKey = "ID" | "CREATED_AT" | "UPDATED_AT";
+// export type SortDirection = "ASC" | "DESC";
 
 export const getSellerDashboardProducts = (params?: {
   page?: number;

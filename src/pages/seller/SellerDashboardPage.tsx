@@ -169,15 +169,16 @@ export default function SellerDashboardPage({ user: userProp }: Props) {
                   </tr>
                 ) : (
                   pageItems.map((p) => (
-                    <tr key={p.id}>
-                      <td>{p.productName}</td>
-                      <td>{new Intl.NumberFormat("ko-KR").format(p.price)}</td>
-                      <td>{p.stockQuantity}</td>
-                      <td>-</td>
+                    <tr key={(p as any).productId ?? (p as any).id}>
+                      <td>{(p as any).productName}</td>
+                      <td>{new Intl.NumberFormat("ko-KR").format((p as any).price)}</td>
+                      <td>{(p as any).stock ?? (p as any).stockQuantity ?? "-"}</td>
+                      <td>{(p as any).createdAt ?? "-"}</td>
                     </tr>
                   ))
                 )}
               </tbody>
+
             </table>
           </div>
 
