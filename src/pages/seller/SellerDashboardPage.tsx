@@ -1,5 +1,4 @@
 // 판매자 대시보드 페이지
-// src/pages/seller/SellerDashboardPage.tsx
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -24,7 +23,10 @@ type Props = {
 
 export default function SellerDashboardPage({ user: userProp }: Props) {
   const navigate = useNavigate();
-  const user = userProp ?? getAuthUser();
+
+  const storedUser = getAuthUser();
+  const user =
+    userProp && userProp.isLoggedIn && userProp.userType !== "GUEST" ? userProp : storedUser;
 
   const [productsPage, setProductsPage] = useState<PageResponseSellerProductResponse | null>(null);
   const [page, setPage] = useState(0);

@@ -102,14 +102,16 @@ body {
 }
 
 .header-logoImage {
-  height: 85px;
+  height: 40px;
   display: block;
+  margin-left: 25px;
 }
 
 .header-searchWrapper {
   position: relative;
   flex: 0 0 400px;
   max-width: 400px;
+  margin-left: 17px;
 }
 
 .header-searchInput {
