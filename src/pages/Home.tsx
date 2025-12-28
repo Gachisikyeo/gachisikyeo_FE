@@ -11,6 +11,8 @@ import ProductSection from "../components/ProductSection";
 
 import type { Product } from "../components/ProductCard";
 import { clearAuth, getAuthUser, type AuthUser } from "../auth/authStorage";
+import { getMypageProfile } from "../api/api";
+
 
 function toCardProductFromList(p: ProductListResponse): Product {
   const unitPrice = p.unitPrice ?? (p.unitQuantity ? Math.ceil(p.price / p.unitQuantity) : p.price);
@@ -45,9 +47,25 @@ function Home() {
   const [loadingPopular, setLoadingPopular] = useState(false);
   const [loadingRecent, setLoadingRecent] = useState(false);
 
+  // useEffect(() => {
+  //   setUser(getAuthUser());
+  // }, []);
   useEffect(() => {
-    setUser(getAuthUser());
-  }, []);
+  const initUser = async () => {
+    const cur = getAuthUser();
+    setUser(cur);
+
+    if (cur.isLoggedIn && (!cur.nickName || !cur.lawDong?.dong)) {
+      try {
+        await getMypageProfile(); 
+      } catch {}
+      setUser(getAuthUser()); 
+    }
+  };
+
+  initUser();
+}, []);
+
 
   useEffect(() => {
     const fetchPopular = async () => {

@@ -12,9 +12,14 @@ type Props = { user: AuthUser; onLogout: () => void };
 function Header({ user, onLogout }: Props) {
   const navigate = useNavigate();
 
-  // const effectiveUser: AuthUser = user?.isLoggedIn ? user : getAuthUser();
   const stored = getAuthUser();
-const effectiveUser: AuthUser = user?.isLoggedIn ? { ...stored, ...user } : stored;
+  const effectiveUser: AuthUser = user?.isLoggedIn 
+    ? { 
+      ...stored, ...user,
+      nickName: user.nickName ?? stored.nickName,
+      lawDong: user.lawDong ?? stored.lawDong,
+    } 
+      : stored;
 
 
   const isGuest = !effectiveUser.isLoggedIn || effectiveUser.userType === "GUEST";
