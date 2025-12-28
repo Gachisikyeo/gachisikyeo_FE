@@ -1,6 +1,5 @@
 // src/api/api.ts
 import axios, { type AxiosError, type AxiosRequestConfig } from "axios";
-// import { clearAuth, getAccessToken, getRefreshToken, saveTokens } from "../auth/authStorage";
 import {
   clearAuth,
   getAccessToken,
