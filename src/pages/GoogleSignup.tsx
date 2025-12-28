@@ -38,11 +38,9 @@ export default function GoogleSignup() {
   const [nickName, setNickName] = useState("");
 
   const [addressLabel, setAddressLabel] = useState("");
-  // const [lawDongId, setLawDongId] = useState<number | null>(null);
   const [lawCode, setLawCode] = useState<string | null>(null);
 
   const [isAddrOpen, setIsAddrOpen] = useState(false);
-
   const [errorMsg, setErrorMsg] = useState("");
 
   useEffect(() => {
@@ -51,13 +49,13 @@ export default function GoogleSignup() {
   }, []);
 
   const canSubmit = useMemo(() => {
-    return userType !== null && nickName.trim().length > 0 && lawCode !== null;
+    return userType !== null && nickName.trim().length > 0 && !!lawCode?.trim();
   }, [userType, nickName, lawCode]);
 
   const showMissingMsg = () => {
     if (!userType) return setErrorMsg("판매자/구매자 중 하나를 선택하세요.");
     if (!nickName.trim()) return setErrorMsg("닉네임을 입력하세요.");
-    if (lawCode === null) return setErrorMsg("지역을 선택하세요.");
+    if (!lawCode?.trim()) return setErrorMsg("지역을 선택하세요.");
     setErrorMsg("");
   };
 
@@ -79,7 +77,7 @@ export default function GoogleSignup() {
         oauth2SignupToken,
         nickName: nickName.trim(),
         userType: userType!,
-        lawDongId: Number(lawCode),
+        lawDongId: lawCode!,
       });
 
       if (!res.data?.success) {
@@ -175,17 +173,16 @@ export default function GoogleSignup() {
             />
           </div>
 
-          // AddressModal onConfirm
           <AddressModal
             isOpen={isAddrOpen}
             onClose={() => setIsAddrOpen(false)}
-            onConfirm={({ label, lawCode }) => {
-              setAddressLabel(label);
-              setLawCode(lawCode);
+            onConfirm={(payload: any) => {
+              const code = payload?.lawCode ?? payload?.lawDongId;
+              setAddressLabel(payload?.label ?? "");
+              setLawCode(code != null ? String(code) : null);
               setErrorMsg("");
             }}
           />
-
 
           {errorMsg && <p className="signupError">{errorMsg}</p>}
 

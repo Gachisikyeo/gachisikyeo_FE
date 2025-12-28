@@ -28,7 +28,7 @@ type BusinessInfoRequest = {
 const SELLER_BIZ_DONE_KEY = "sellerBusinessInfoRegistered";
 const SELLER_BIZ_DATA_KEY = "sellerBusinessInfoData";
 
-// 사업자등록번호 형식(예: 123-45-67890)
+// 사업자등록번호 형식
 const BUSINESS_NUMBER_REGEX = /^\d{3}-\d{2}-\d{5}$/;
 
 function SellerAuthPage() {

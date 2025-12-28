@@ -47,7 +47,7 @@
 }
 
 .sdStatLabel {
-  margin-bottom: 6px; /* 총 상품 & 수랑 값 간격 */
+  margin-bottom: 6px; 
 }
 
 .sdStatValue--sales {
@@ -62,7 +62,7 @@
 }
 
 .sdIconWrap--sales {
-  margin-bottom: 6px; /* 매출이랑 가격 간격 */
+  margin-bottom: 6px; 
 }
 
 .sdStatLabel {

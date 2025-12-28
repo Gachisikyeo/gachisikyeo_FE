@@ -1,5 +1,4 @@
 // src/components/ProductCard.tsx
-
 export type Product = {
   id: number;
   title: string;

@@ -200,7 +200,7 @@ export const signup = (data: {
   name: string;
   nickName: string;
   userType: "BUYER" | "SELLER";
-  lawDongId: number;
+  lawDongId: string | number;
 }) => {
   return api.post<ApiResponseTemplate<any>>("/auth/signup", data);
 };
@@ -215,7 +215,7 @@ export const oauth2Signup = (data: {
   oauth2SignupToken: string;
   nickName: string;
   userType: "BUYER" | "SELLER";
-  lawDongId: number;
+  lawDongId: string | number;
 }) => {
   return plain.post<ApiResponseTemplate<LoginResponseData>>("/auth/oauth2/signup", data);
 };
@@ -285,12 +285,14 @@ export type ProductCategory = "FOOD" | "NON_FOOD" | "CLOTHES";
 
 export type ProductDetailDto = {
   id: number;
-  category: ProductCategory;
+  category?: ProductCategory;
   productName: string;
   price: number;
-  stockQuantity: number;
-  unitQuantity: number;
-  imageUrl: string;
+  stockQuantity?: number;
+  unitQuantity?: number;
+  unitPrice?: number;
+  imageUrl?: string;
+  storeName?: string;
   descriptionTitle?: string;
   description?: string;
 };
@@ -354,14 +356,11 @@ export type PopularProductResponse = {
 export const getPopularProducts = (params?: { page?: number; size?: number }) => {
   return plain.get<ApiResponseTemplate<PageSliceResponse<PopularProductResponse>>>("/api/products/popular", { params });
 };
-// 일단여기까지
-
-
-
 
 export type GroupPurchaseListItem = {
   id: number;
   regionName?: string;
+  dong?: string;
   hostNickName?: string;
   hostBuyQuantity: number;
   targetQuantity: number;
@@ -370,12 +369,33 @@ export type GroupPurchaseListItem = {
   pickupLocation: string;
   pickupAt: string;
   pickupAfterEnd?: boolean;
+  groupPurchaseId?: number;
+  hostUserId?: number;
+  userNickName?: string;
+  hostContact?: string;
+  status?: string;
   currentQuantity?: number;
+  total_participation?: number;
+  totalParticipation?: number;
+
 };
 
 export const getGroupPurchasesByProductId = (productId: number) => {
   return plain.get<ApiResponseTemplate<GroupPurchaseListItem[]>>(`/api/products/${productId}/group-purchases`);
 };
+
+export type GroupPurchaseJoinDetailDto = {
+  productName: string;
+  targetQuantity: number;
+  groupEndAt: string;
+  pickupLocation: string;
+  pickupAt: string;
+};
+
+export const getGroupPurchaseJoinDetail = (groupPurchaseId: number) => {
+  return api.get<ApiResponseTemplate<GroupPurchaseJoinDetailDto>>(`/api/group-purchases/${groupPurchaseId}`);
+};
+
 
 export type ProductCreateRequest = {
   category: ProductCategory;
@@ -395,31 +415,82 @@ export const createProduct = (data: ProductCreateRequest, image: File) => {
   return multipartApi.post<ApiResponseTemplate<any>>("/api/products", formData);
 };
 
-// export const createProduct = (data: ProductCreateRequest, image: File) => {
-//   const formData = new FormData();
-//   formData.append(
-//     "data",
-//     new Blob([JSON.stringify(data)], { type: "application/json" })
-//   );
-//   formData.append("image", image);
-//   return multipartApi.post<ApiResponseTemplate<any>>("/api/products", formData);
-// };
-
-
 export type GroupPurchaseCreateRequest = {
-  regionId: number;
   hostBuyQuantity: number;
   targetQuantity: number;
   minimumOrderUnit: number;
   groupEndAt: string;
+
+  deliveryLocation: string;
   pickupLocation: string;
   pickupAt: string;
+
+  hostContact: string;
   pickupAfterEnd?: boolean;
 };
 
-export const createGroupPurchase = (productId: number, data: GroupPurchaseCreateRequest) => {
-  return api.post<ApiResponseTemplate<any>>(`/api/products/${productId}/group-purchases`, data);
+
+export type CreateGroupPurchaseResponseDto = {
+  groupPurchaseId: number;
+
+  hostUserId: number;
+  userNickName: string;
+  hostContact: string;
+
+  currentQuantity: number;
+  targetQuantity: number;
+  groupEndAt: string;
+  regionId?: number;
+  regionName?: string;
 };
+
+export const createGroupPurchase = (productId: number, data: GroupPurchaseCreateRequest) => {
+  return api.post<ApiResponseTemplate<CreateGroupPurchaseResponseDto>>(`/api/products/${productId}/group-purchases`, data);
+};
+
+export type CreateParticipationRequestDto = {
+  quantity: number;
+  buyerContact: string;
+};
+
+export type CreateParticipationResponseDto = {
+  participationId: number;
+  participationStatus?: string;
+  quantity: number;
+  buyerContact: string;
+  shareAmount?: number;
+  createdAt?: string;
+
+  groupPurchaseId: number;
+  groupPurchaseStatus?: string;
+  groupEndAt?: string;
+  currentQuantity?: number;
+  targetQuantity?: number;
+  minimumOrderUnit?: number;
+
+  productId?: number;
+  productName?: string;
+  unitPrice?: number;
+  totalQuantity?: number;
+};
+
+export const createParticipation = (groupPurchaseId: number, data: CreateParticipationRequestDto) => {
+  return api.post<ApiResponseTemplate<CreateParticipationResponseDto>>(
+    `/api/group-purchases/${groupPurchaseId}/participations`,
+    data
+  );
+};
+
+export const getParticipationPaymentInfo = (participationId: number) => {
+  return api.get<ApiResponseTemplate<any>>(`/api/participations/${participationId}`);
+};
+
+export const confirmParticipationPayment = (participationId: number) => {
+  return api.post<ApiResponseTemplate<any>>(
+    `/api/participations/${participationId}/payments/confirm`
+  );
+};
+
 
 export type PageResponse<T> = {
   content: T[];
@@ -544,16 +615,6 @@ export const getSellerTotalSoldQuantity = () => {
   return api.get<ApiResponseTemplate<SellerDashboardResponse>>("/api/seller/dashboard/sales");
 };
 
-// export type SellerProductResponse = {
-//   id: number;
-//   productName: string;
-//   price: number;
-//   stockQuantity: number;
-//   imageUrl: string;
-//   unitQuantity: number;
-//   unitPrice: number;
-// };
-
 export type SellerProductResponse = {
   productId: number;
   productName: string;
@@ -575,8 +636,6 @@ export type PageResponseSellerProductResponse = {
   hasNext: boolean;
 };
 
-// export type SellerProductSortKey = "ID" | "CREATED_AT" | "UPDATED_AT";
-// export type SortDirection = "ASC" | "DESC";
 
 export const getSellerDashboardProducts = (params?: {
   page?: number;

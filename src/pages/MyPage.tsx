@@ -1,4 +1,3 @@
-// 마이페이지
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
@@ -31,8 +30,23 @@ function formatWonPhotoStyle(value: number) {
 function unwrapData<T>(res: any): T | null {
   const d = res?.data;
   if (!d) return null;
-  if (typeof d === "object" && "data" in d) return (d as any).data as T;
+  if (typeof d === "object" && d !== null && "data" in d) return (d as any).data as T;
   return d as T;
+}
+
+function unwrapSlice<T>(res: any): SliceResponse<T> | null {
+  const raw = unwrapData<any>(res);
+  if (!raw) return null;
+  if (Array.isArray(raw.items)) return raw as SliceResponse<T>;
+  if (Array.isArray(raw.content)) {
+    return {
+      items: raw.content,
+      page: raw.page ?? raw.number ?? 0,
+      size: raw.size ?? raw.pageSize ?? raw.numberOfElements ?? 0,
+      hasNext: raw.hasNext ?? !raw.last,
+    } as SliceResponse<T>;
+  }
+  return raw as SliceResponse<T>;
 }
 
 type OrderRowItem = {
@@ -59,9 +73,21 @@ function toRowItem(dto: MyParticipationGroupPurchaseDto): OrderRowItem {
   };
 }
 
+function normalizeUserType(v: any) {
+  const s = String(v ?? "")
+    .trim()
+    .toUpperCase();
+  if (!s) return "GUEST";
+  if (s.includes("SELLER")) return "SELLER";
+  if (s.includes("BUYER")) return "BUYER";
+  if (s.includes("GUEST")) return "GUEST";
+  return s;
+}
+
 function userTypeLabel(userType: any) {
-  if (userType === "SELLER") return "판매자";
-  if (userType === "BUYER") return "구매자";
+  const t = normalizeUserType(userType);
+  if (t === "SELLER") return "판매자";
+  if (t === "BUYER") return "구매자";
   return "게스트";
 }
 
@@ -107,7 +133,7 @@ export default function MyPage() {
       const profileData = unwrapData<MyProfileResponseDto>(profileRes);
       setProfile(profileData ?? null);
 
-      const completedSlice = unwrapData<SliceResponse<MyParticipationGroupPurchaseDto>>(completedRes);
+      const completedSlice = unwrapSlice<MyParticipationGroupPurchaseDto>(completedRes);
       setCompletedItems(completedSlice?.items ?? []);
       setCompletedMeta({
         page: completedSlice?.page ?? 0,
@@ -116,7 +142,7 @@ export default function MyPage() {
         expanded: false,
       });
 
-      const ongoingSlice = unwrapData<SliceResponse<MyParticipationGroupPurchaseDto>>(ongoingRes);
+      const ongoingSlice = unwrapSlice<MyParticipationGroupPurchaseDto>(ongoingRes);
       setOngoingItems(ongoingSlice?.items ?? []);
       setOngoingMeta({
         page: ongoingSlice?.page ?? 0,
@@ -162,7 +188,8 @@ export default function MyPage() {
   const nickNameValue = profile?.nickname ?? (user as any).nickName ?? "-";
   const emailValue = profile?.email ?? (user as any).email ?? "-";
   const regionValue = profile?.lawDong ?? (user as any).lawDong?.dong ?? "위치 미설정";
-  const userTypeValue = userTypeLabel((user as any).userType);
+
+  const userTypeValue = userTypeLabel((user as any).userType ?? profile?.userType);
 
   const completedRows = completedItems.map(toRowItem);
   const ongoingRows = ongoingItems.map(toRowItem);
@@ -176,7 +203,7 @@ export default function MyPage() {
     try {
       if (!completedMeta.expanded) {
         const res = await getMypageParticipationsCompleted({ page: 0, size: 3 });
-        const slice = unwrapData<SliceResponse<MyParticipationGroupPurchaseDto>>(res);
+        const slice = unwrapSlice<MyParticipationGroupPurchaseDto>(res);
         setCompletedItems(slice?.items ?? []);
         setCompletedMeta({
           page: slice?.page ?? 0,
@@ -190,7 +217,7 @@ export default function MyPage() {
       if (!completedMeta.hasNext) return;
       const nextPage = completedMeta.page + 1;
       const res = await getMypageParticipationsCompleted({ page: nextPage, size: completedMeta.size });
-      const slice = unwrapData<SliceResponse<MyParticipationGroupPurchaseDto>>(res);
+      const slice = unwrapSlice<MyParticipationGroupPurchaseDto>(res);
       setCompletedItems((prev) => [...prev, ...(slice?.items ?? [])]);
       setCompletedMeta((prev) => ({ ...prev, page: slice?.page ?? nextPage, hasNext: !!slice?.hasNext }));
     } catch (e) {
@@ -207,7 +234,7 @@ export default function MyPage() {
     try {
       const nextPage = ongoingMeta.page + 1;
       const res = await getMypageParticipationsOngoing({ page: nextPage, size: ongoingMeta.size });
-      const slice = unwrapData<SliceResponse<MyParticipationGroupPurchaseDto>>(res);
+      const slice = unwrapSlice<MyParticipationGroupPurchaseDto>(res);
       setOngoingItems((prev) => [...prev, ...(slice?.items ?? [])]);
       setOngoingMeta((prev) => ({ ...prev, page: slice?.page ?? nextPage, hasNext: !!slice?.hasNext }));
     } catch (e) {
@@ -292,7 +319,9 @@ export default function MyPage() {
             ) : ongoingItems.length === 0 ? (
               <div className="mypage__empty">참가중인 공구가 아직 없어요</div>
             ) : (
-              ongoingRows.map((o) => <OrderRow key={o.id} order={o} onClick={() => {}} />)
+              ongoingRows.map((o) => (
+                <OrderRow key={o.id} order={o} onClick={() => navigate(`/mypage/orders/${o.id}`)} />
+              ))
             )}
 
             {canMoreOngoing && (

@@ -77,7 +77,6 @@ function RecentPage() {
           title=""
           products={products}
           onClickViewMore={() => {}}
-          showMinOrderQty
           onClickProduct={handleClickProduct}
         />
         {loading && <div style={{ padding: "16px" }}>불러오는 중...</div>}

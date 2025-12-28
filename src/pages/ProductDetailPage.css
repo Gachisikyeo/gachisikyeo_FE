@@ -28,7 +28,7 @@
 .product-detail__imageBox {
   width: 350px;
   height: 380px;
-  border: 1px solid #333;
+  border: 1px #333;
   background: #eee;
   display: flex;
   align-items: center;
@@ -254,3 +254,11 @@
   color: #111;
 }
 
+.product-detail__descText {
+  white-space: pre-wrap;
+  word-break: keep-all;
+  overflow-wrap: anywhere;
+  line-height: 1.6;
+  /* text-align: center; */
+  margin-top: 120px;
+}

@@ -12,6 +12,7 @@ import "./PaymentSuccessPage.css";
 
 type PaymentState = {
   orderNo?: string;
+  groupPurchaseId?: number;
   productName?: string;
   totalPrice?: number;
 
@@ -61,7 +62,6 @@ function genOrderNo() {
   return `${yyyy}${mm}${dd}${tail}`;
 }
 
-// 사진처럼 0,000원 형태도 자연스럽게 나오게(1000 미만일 때만 0,xxx)
 function formatWonPhotoStyle(value: number) {
   if (value < 0) return `${value.toLocaleString("ko-KR")}원`;
 
@@ -78,7 +78,10 @@ export default function PaymentSuccessPage() {
 
   const state = (location.state ?? {}) as PaymentState;
 
-  const orderNo = useMemo(() => state.orderNo ?? genOrderNo(), [state.orderNo]);
+  const orderNo = useMemo(() => {
+    if (typeof state.groupPurchaseId === "number" && state.groupPurchaseId > 0) return String(state.groupPurchaseId);
+    return state.orderNo ?? genOrderNo();
+  }, [state.groupPurchaseId, state.orderNo]);
 
   const productName = state.productName ?? "상품명";
   const totalPrice = state.totalPrice ?? 0;
@@ -91,8 +94,8 @@ export default function PaymentSuccessPage() {
       status: "IN_PROGRESS",
       productName,
       totalPrice,
-      quantity: 1, 
-      eachPrice: totalPrice, 
+      quantity: 1,
+      eachPrice: totalPrice,
       shippingFee: 0,
     };
 
@@ -116,45 +119,36 @@ export default function PaymentSuccessPage() {
             결제가 정상적으로 완료되었습니다.
           </div>
 
-          <div className="payment-success__infoCard">
+          <div className="payment-success__card">
             <div className="payment-success__row">
-              <div className="payment-success__label">주문번호</div>
-              <div className="payment-success__value">{orderNo}</div>
+              <span className="payment-success__label">주문번호</span>
+              <span className="payment-success__value">{orderNo}</span>
             </div>
 
             <div className="payment-success__row">
-              <div className="payment-success__label">상품명</div>
-              <div className="payment-success__value">{productName}</div>
+              <span className="payment-success__label">주문상품</span>
+              <span className="payment-success__value">{productName}</span>
             </div>
 
             <div className="payment-success__row">
-              <div className="payment-success__label">결제 금액</div>
-              <div className="payment-success__value">
+              <span className="payment-success__label">결제금액</span>
+              <span className="payment-success__value payment-success__value--price">
                 {formatWonPhotoStyle(totalPrice)}
-              </div>
+              </span>
             </div>
 
             <div className="payment-success__row">
-              <div className="payment-success__label">구매자명</div>
-              <div className="payment-success__value">{buyerName}</div>
+              <span className="payment-success__label">구매자</span>
+              <span className="payment-success__value">{buyerName}</span>
             </div>
           </div>
 
           <div className="payment-success__buttons">
-            <button
-              type="button"
-              className="payment-success__btn"
-              onClick={handleGoOrderDetail}
-            >
-              주문상세보기
+            <button type="button" className="payment-success__btn" onClick={handleGoOrderDetail}>
+              주문상세 보기
             </button>
-
-            <button
-              type="button"
-              className="payment-success__btn"
-              onClick={() => navigate("/")}
-            >
-              메인페이지로
+            <button type="button" className="payment-success__btn payment-success__btn--primary" onClick={() => navigate("/")}>
+              홈으로
             </button>
           </div>
         </section>

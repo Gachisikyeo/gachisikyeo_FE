@@ -65,7 +65,6 @@ function App() {
       <Route path="/mypage" element={<MyPage />} />
       <Route path="/mypage/orders/:orderId" element={<OrderDetailPage />} />
 
-
     </Routes>
   );
 }

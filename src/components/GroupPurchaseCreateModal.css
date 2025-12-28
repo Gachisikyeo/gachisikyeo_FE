@@ -31,7 +31,7 @@
   position: relative;
   display: flex;
   align-items: center;
-  justify-content: flex-end; /* 닫기 버튼을 오른쪽으로 */
+  justify-content: flex-end;
   margin-bottom: 14px;
 }
 
@@ -43,7 +43,6 @@
   font-weight: 700;
   margin: 0;
 }
-
 
 .gp-closeBtn {
   width: 30px;
@@ -89,6 +88,31 @@
 .gp-qtyBlock {
   margin-bottom: 16px;
   margin-top: 8px;
+}
+
+.gp-qtyGrid {
+  display: flex;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.gp-qtyCol {
+  flex: 1;
+  min-width: 220px;
+}
+
+.gp-qtyColRight {
+  flex: 1;
+  min-width: 260px;
+}
+
+.gp-qtyColRight .gp-label {
+  text-align: right;
+}
+
+.gp-qtyColRight .gp-qtyRow {
+  justify-content: flex-end;
 }
 
 .gp-qtyRow {
@@ -226,6 +250,51 @@
   gap: 10px;
 }
 
+.gp-rowEndPhone {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 10px;
+}
+
+.gp-timeRow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.gp-meridiemBtn {
+  width: 56px;
+  height: 36px;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  background: #fff;
+  cursor: pointer;
+  font-size: 13px;
+  font-weight: 800;
+  color: #111827;
+}
+
+.gp-meridiemBtn.isActive {
+  background: #2d9dff;
+  border-color: #2d9dff;
+  color: #fff;
+}
+
+.gp-meridiemBtn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.gp-timeInput {
+  width: 72px;
+}
+
+.gp-timeColon {
+  font-weight: 900;
+  color: #6b7280;
+}
+
 @media (max-width: 520px) {
   .gp-modalOverlay {
     padding: 14px;
@@ -234,6 +303,9 @@
     padding: 18px 16px 14px;
   }
   .gp-row2 {
+    grid-template-columns: 1fr;
+  }
+  .gp-rowEndPhone {
     grid-template-columns: 1fr;
   }
 }

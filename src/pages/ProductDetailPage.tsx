@@ -38,6 +38,47 @@ function formatDeadline(iso?: string) {
   return `${mm}/${dd} ${hh}:${mi} 마감`;
 }
 
+function formatCategoryLabel(category?: ProductCategory) {
+  if (!category) return "-";
+  if (category === "FOOD") return "식품";
+  if (category === "NON_FOOD") return "비식품";
+  if (category === "CLOTHES") return "의류";
+  return String(category);
+}
+
+function normalizeProductDetail(raw: any, pid: number, fallbackCategory?: ProductCategory): ProductDetailDto {
+  const category = (raw?.category ?? raw?.productCategory ?? raw?.categoryType ?? fallbackCategory) as ProductCategory | undefined;
+  const storeName =
+    raw?.storeName ??
+    raw?.marketName ??
+    raw?.sellerStoreName ??
+    raw?.seller?.storeName ??
+    raw?.businessInfo?.storeName;
+
+  return {
+    id: Number(raw?.id ?? raw?.productId ?? pid),
+    category,
+    productName: String(raw?.productName ?? raw?.name ?? ""),
+    price: Number(raw?.price ?? 0),
+    stockQuantity: raw?.stockQuantity ?? raw?.stock,
+    unitQuantity: raw?.unitQuantity ?? raw?.packCount,
+    unitPrice: raw?.unitPrice,
+    imageUrl: raw?.imageUrl ?? raw?.thumbnailUrl,
+    storeName: storeName ? String(storeName) : undefined,
+    descriptionTitle: raw?.descriptionTitle ?? raw?.description_title,
+    description: raw?.description ?? raw?.detailDescription ?? raw?.content,
+  };
+}
+
+function isOpenGp(gp: GroupPurchaseListItem) {
+  const status = (gp as any)?.status;
+  if (status) return String(status).toUpperCase() === "OPEN";
+
+  const end = new Date(gp.groupEndAt).getTime();
+  if (!Number.isFinite(end)) return true;
+  return end > Date.now();
+} //공구마감처리함
+
 export default function ProductDetailPage() {
   const [user, setUser] = useState<AuthUser>(() => getAuthUser());
   const navigate = useNavigate();
@@ -62,9 +103,27 @@ export default function ProductDetailPage() {
 
   const eachPrice = useMemo(() => {
     if (!product) return 0;
+    const beUnitPrice = Number((product as any).unitPrice ?? 0);
+    if (beUnitPrice > 0) return Math.round(beUnitPrice);
     const count = Math.max(1, Number(product.unitQuantity ?? 1));
     return Math.round(Number(product.price ?? 0) / count);
   }, [product]);
+
+  const sellerName = useMemo(() => {
+    return (product as any)?.storeName ?? (product as any)?.marketName ?? "-";
+  }, [product]);
+
+  const openGroupPurchases = useMemo(() => {
+    return [...groupPurchases]
+      .filter(isOpenGp)
+      .sort((a, b) => {
+        const ta = new Date(a.groupEndAt ?? 0).getTime();
+        const tb = new Date(b.groupEndAt ?? 0).getTime();
+        return ta - tb;
+      });
+  }, [groupPurchases]);
+
+  const previewGroupPurchases = useMemo(() => openGroupPurchases.slice(0, 3), [openGroupPurchases]);
 
   const handleLogout = async () => {
     try {
@@ -102,7 +161,8 @@ export default function ProductDetailPage() {
 
       try {
         const prodRes = await getProductById(pid);
-        setProduct(prodRes.data.data ?? null);
+        const raw = prodRes.data.data as any;
+        setProduct(raw ? normalizeProductDetail(raw, pid, fallbackCategory) : null);
       } catch (e) {
         console.warn("product detail api failed -> fallback to route state:", e);
 
@@ -115,6 +175,7 @@ export default function ProductDetailPage() {
             stockQuantity: 0,
             unitQuantity: 1,
             imageUrl: fallbackProduct.imageUrl,
+            storeName: undefined,
             descriptionTitle: undefined,
             description: undefined,
           });
@@ -167,7 +228,7 @@ export default function ProductDetailPage() {
             </div>
 
             <div className="product-detail__info">
-              <div className="product-detail__seller">판매자</div>
+              <div className="product-detail__seller">판매자 {sellerName}</div>
 
               <div className="product-detail__titleRow">
                 <h1 className="product-detail__title">{product?.productName ?? "상품명"}</h1>
@@ -184,7 +245,7 @@ export default function ProductDetailPage() {
                 </div>
                 <div className="product-detail__metaLine">
                   <span className="product-detail__metaLabel">카테고리</span>
-                  <span className="product-detail__metaValue">{product?.category ?? "-"}</span>
+                  <span className="product-detail__metaValue">{formatCategoryLabel(product?.category)}</span>
                 </div>
                 <div className="product-detail__metaLine">
                   <span className="product-detail__metaLabel">구성수량</span>
@@ -209,14 +270,17 @@ export default function ProductDetailPage() {
             </div>
 
             <div className="product-detail__gpList">
-              {groupPurchases.length === 0 && <div className="product-detail__emptyGp">진행중인 공구가 없어요</div>}
+              {previewGroupPurchases.length === 0 && <div className="product-detail__emptyGp">진행중인 공구가 없어요</div>}
 
-              {groupPurchases.map((gp) => {
+              {previewGroupPurchases.map((gp) => {
                 const gpId = (gp as any).groupPurchaseId ?? gp.id;
 
                 const current = Number(gp.currentQuantity ?? 0);
                 const target = Number(gp.targetQuantity ?? 0);
+                const participantsRaw = (gp as any).totalParticipation ?? (gp as any).total_participation;
+                const participants = Number(participantsRaw ?? 0);
                 const host = gp.hostNickName ?? (gp as any).userNickName ?? "-";
+                const regionLabel = (gp as any).dong ?? gp.regionName ?? "-";
 
                 return (
                   <button key={gpId} type="button" className="gp-row" onClick={() => handleClickJoin(gp)}>
@@ -231,11 +295,11 @@ export default function ProductDetailPage() {
                         <span className="gp-row__numBlack"> / {String(target).padStart(2, "0")}</span>
                       </div>
                       <div className="gp-row__col gp-row__participants">
-                        <span className="gp-row__numBlue">{current}</span>
+                        <span className="gp-row__numBlue">{participants}</span>
                         <span className="gp-row__participantsLabel">명 참가중</span>
                       </div>
                       <div className="gp-row__col gp-row__deadline">{formatDeadline(gp.groupEndAt)}</div>
-                      <div className="gp-row__col gp-row__region">{gp.regionName ?? "-"}</div>
+                      <div className="gp-row__col gp-row__region">{regionLabel}</div>
                     </div>
                   </button>
                 );
@@ -247,15 +311,19 @@ export default function ProductDetailPage() {
             </div>
 
             <div className="product-detail__gpFooter">
-              <button type="button" className="product-detail__moreBtn" onClick={() => navigate(`/products/${pid}/group-purchases`)}>
+              <button
+                type="button"
+                className="product-detail__moreBtn"
+                onClick={() => navigate(`/products/${pid}/group-purchases`)}
+              >
                 진행중인 공구 더보기 &gt;
               </button>
             </div>
           </section>
 
           <section className="product-detail__descSection">
-            <h2 className="product-detail__descTitle">{product?.descriptionTitle ?? "상품 설명"}</h2>
-            <p className="product-detail__descText">{product?.description ?? "상품 설명"}</p>
+            <h2 className="product-detail__descTitle">{product?.descriptionTitle?.trim() || "상품 설명"}</h2>
+            <p className="product-detail__descText">{product?.description?.trim() || "상품 설명이 없습니다."}</p>
             <div className="product-detail__descImages" />
           </section>
         </div>
@@ -264,19 +332,23 @@ export default function ProductDetailPage() {
       {product && (
         <GPCreateModal
           isOpen={isCreateOpen}
-          onClose={() => setIsCreateOpen(false)}
+          onClose={async () => {
+            setIsCreateOpen(false);
+            await reloadGroupPurchases();
+          }}
           productId={product.id}
           productName={product.productName}
           packagePrice={product.price}
           packCount={product.unitQuantity ?? 12}
           user={user}
-          onPaid={(payload: { productId: number; productName: string; totalPrice: number }) => {
+          onPaid={(payload: { productId: number; productName: string; totalPrice: number; groupPurchaseId: number }) => {
             const buyerName = user.nickName ?? user.name ?? "익명";
-            const orderNo = `GP-${Date.now()}`;
+            const orderNo = String(payload.groupPurchaseId);
 
             navigate("/payment/success", {
               state: {
                 orderNo,
+                groupPurchaseId: payload.groupPurchaseId,
                 buyerName,
                 productId: payload.productId,
                 productName: payload.productName,
@@ -290,9 +362,10 @@ export default function ProductDetailPage() {
       {isJoinOpen && product && selectedGp && (
         <GPJoinModal
           isOpen={isJoinOpen}
-          onClose={() => {
+          onClose={async () => {
             setIsJoinOpen(false);
             setSelectedGp(null);
+            await reloadGroupPurchases();
           }}
           user={user}
           groupPurchase={selectedGp}
@@ -304,12 +377,14 @@ export default function ProductDetailPage() {
             productId: number;
             productName: string;
             totalPrice: number;
-            buyQuantity?: number;
-            paymentMethod?: string;
-            groupPurchaseId?: number;
+            buyQuantity: number;
+            paymentMethod: "NAVER" | "KAKAO";
+            groupPurchaseId: number;
+            participationId?: number;
+            buyerContact?: string;
           }) => {
             const buyerName = user.nickName ?? user.name ?? "익명";
-            const orderNo = `GPJ-${Date.now()}`;
+            const orderNo = String(payload.groupPurchaseId);
 
             navigate("/payment/success", {
               state: {
@@ -321,6 +396,8 @@ export default function ProductDetailPage() {
                 buyQuantity: payload.buyQuantity,
                 paymentMethod: payload.paymentMethod,
                 groupPurchaseId: payload.groupPurchaseId,
+                participationId: payload.participationId,
+                buyerContact: payload.buyerContact,
               },
             });
           }}

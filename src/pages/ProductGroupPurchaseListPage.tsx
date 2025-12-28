@@ -1,7 +1,7 @@
 // 상품 공구 목록 페이지
-// src/pages/ProductGroupPurchaseListPage.tsx
+// src/pages/GroupPurchaseListPage.tsx
 import { useEffect, useMemo, useState } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
 
 import Header from "../components/Header";
 import CategoryNav from "../components/CategoryNav";
@@ -9,61 +9,76 @@ import CategoryNav from "../components/CategoryNav";
 import GroupPurchaseCreateModal from "../components/GroupPurchaseCreateModal";
 import GroupPurchaseJoinModal from "../components/GroupPurchaseJoinModal";
 
+import type { Product } from "../components/ProductCard";
 import { clearAuth, getAuthUser, type AuthUser } from "../auth/authStorage";
-import * as API from "../api/api";
+import {
+  getGroupPurchasesByProductId,
+  getProductById,
+  logout,
+  type GroupPurchaseListItem,
+  type ProductCategory,
+  type ProductDetailDto,
+} from "../api/api";
 
+import "./ProductDetailPage.css";
 import "./ProductGroupPurchaseListPage.css";
 
-// 이따 지우기
-const USE_MOCK = true;
+function getEndAtMillis(iso?: string) {
+  if (!iso) return NaN;
+  if (iso.includes("T")) return new Date(iso).getTime();
 
-type ProductDetailDto = {
-  id: number;
-  productName?: string;
-  price?: number;
-  stockQuantity?: number;
-  imageUrl?: string;
-  unitQuantity?: number;
-  category?: string;
-  descriptionTitle?: string;
-  description?: string;
-  eachPrice?: number;
-};
-
-type GroupPurchaseListItem = {
-  // 백엔드/기존 코드가 둘 중 뭘 주든 대응
-  id?: number;
-  groupPurchaseId?: number;
-
-  regionId?: number;
-  regionName?: string;
-  hostUserId?: number;
-  userNickName?: string;
-
-  currentQuantity?: number;
-  targetQuantity?: number;
-
-  groupEndAt?: string;
-
-  status?: string;
-};
-
-function formatDeadline(iso?: string) {
-  if (!iso) return "-";
-  const d = new Date(iso);
-  if (Number.isNaN(d.getTime())) return "-";
-  const mm = String(d.getMonth() + 1).padStart(2, "0");
-  const dd = String(d.getDate()).padStart(2, "0");
-  const hh = String(d.getHours()).padStart(2, "0");
-  const mi = String(d.getMinutes()).padStart(2, "0");
-  return `${mm}/${dd} ${hh}:${mi} 마감`;
+  const [y, m, d] = iso.split("-").map((v) => Number(v));
+  if (!y || !m || !d) return NaN;
+  return new Date(y, m - 1, d, 23, 59, 59, 999).getTime();
 }
 
-export default function ProductGroupPurchaseListPage() {
+function normalizeProductDetail(raw: any, pid: number, fallbackCategory?: ProductCategory): ProductDetailDto {
+  const category = (raw?.category ?? raw?.productCategory ?? raw?.categoryType ?? fallbackCategory) as
+    | ProductCategory
+    | undefined;
+
+  const storeName =
+    raw?.storeName ??
+    raw?.marketName ??
+    raw?.sellerStoreName ??
+    raw?.seller?.storeName ??
+    raw?.businessInfo?.storeName;
+
+  return {
+    id: Number(raw?.id ?? raw?.productId ?? pid),
+    category,
+    productName: String(raw?.productName ?? raw?.name ?? ""),
+    price: Number(raw?.price ?? 0),
+    stockQuantity: raw?.stockQuantity ?? raw?.stock,
+    unitQuantity: raw?.unitQuantity ?? raw?.packCount,
+    unitPrice: raw?.unitPrice,
+    imageUrl: raw?.imageUrl ?? raw?.thumbnailUrl,
+    storeName: storeName ? String(storeName) : undefined,
+    descriptionTitle: raw?.descriptionTitle ?? raw?.description_title,
+    description: raw?.description ?? raw?.detailDescription ?? raw?.content,
+  };
+}
+
+function isOpenGp(gp: GroupPurchaseListItem) {
+  const status = (gp as any)?.status;
+  if (status) return String(status).toUpperCase() === "OPEN";
+
+  const end = getEndAtMillis((gp as any)?.groupEndAt);
+  if (!Number.isFinite(end)) return true;
+  return end > Date.now();
+}
+
+export default function GroupPurchaseListPage() {
   const [user, setUser] = useState<AuthUser>(() => getAuthUser());
   const navigate = useNavigate();
   const { productId } = useParams();
+
   const pid = useMemo(() => Number(productId), [productId]);
+
+  const location = useLocation();
+  const fallbackProduct = (location.state as any)?.product as ProductDetailDto | Product | undefined;
+  const fallbackCategory = (location.state as any)?.category as ProductCategory | undefined;
+  const fallbackEachPrice = Number((location.state as any)?.eachPrice ?? 0);
 
   const [product, setProduct] = useState<ProductDetailDto | null>(null);
   const [groupPurchases, setGroupPurchases] = useState<GroupPurchaseListItem[]>([]);
@@ -76,21 +91,35 @@ export default function ProductGroupPurchaseListPage() {
   const GPCreateModal = GroupPurchaseCreateModal as unknown as any;
   const GPJoinModal = GroupPurchaseJoinModal as unknown as any;
 
-  // const eachPrice = useMemo(() => {
-  //   if (!product) return 0;
-  //   const fromBE = (product as any)?.eachPrice as number | undefined;
-  //   if (typeof fromBE === "number" && fromBE > 0) return fromBE;
+  const packCount = Number(product?.unitQuantity ?? 1);
 
-  //   const count = Math.max(1, Number(product.unitQuantity ?? 1));
-  //   return Math.round(Number(product.price ?? 0) / count);
-  // }, [product]);
+  const eachPrice = useMemo(() => {
+    if (!product) return 0;
+    const beUnitPrice = Number((product as any).unitPrice ?? 0);
+    if (beUnitPrice > 0) return Math.round(beUnitPrice);
+    if (fallbackEachPrice > 0) return fallbackEachPrice;
+    const count = Math.max(1, packCount);
+    return Math.round(Number(product.price ?? 0) / count);
+  }, [fallbackEachPrice, packCount, product]);
+
+  const openGroupPurchases = useMemo(() => {
+    return [...groupPurchases]
+      .filter(isOpenGp)
+      .sort((a, b) => {
+        const ta = getEndAtMillis((a as any)?.groupEndAt);
+        const tb = getEndAtMillis((b as any)?.groupEndAt);
+        if (!Number.isFinite(ta) && !Number.isFinite(tb)) return 0;
+        if (!Number.isFinite(ta)) return 1;
+        if (!Number.isFinite(tb)) return -1;
+        return ta - tb;
+      });
+  }, [groupPurchases]);
 
   const handleLogout = async () => {
     try {
-      const logoutFn = (API as any).logout as (() => Promise<any>) | undefined;
-      if (logoutFn) await logoutFn();
-    } catch (e) {
-      console.error("logout failed:", e);
+      await logout();
+    } catch (error) {
+      console.error("logout failed:", error);
     } finally {
       clearAuth();
       setUser({ isLoggedIn: false, userType: "GUEST" });
@@ -104,14 +133,8 @@ export default function ProductGroupPurchaseListPage() {
 
   const reloadGroupPurchases = async () => {
     try {
-      const fn = (API as any).getGroupPurchasesByProductId as ((id: number) => Promise<any>) | undefined;
-      if (!fn) {
-        setGroupPurchases([]);
-        return;
-      }
-
-      const gpRes = await fn(pid);
-      setGroupPurchases(gpRes?.data?.data ?? []);
+      const gpRes = await getGroupPurchasesByProductId(pid);
+      setGroupPurchases(gpRes.data.data ?? []);
     } catch (e) {
       console.error("groupPurchases load failed:", e);
       setGroupPurchases([]);
@@ -121,62 +144,38 @@ export default function ProductGroupPurchaseListPage() {
   useEffect(() => {
     if (!pid || Number.isNaN(pid)) return;
 
-    if (USE_MOCK) {
-      setProduct({
-        id: pid,
-        productName: "상하키친 포크카레 170g 12팩",
-        price: 12000,
-        stockQuantity: 999,
-        imageUrl: "",
-        unitQuantity: 12,
-        category: "FOOD",
-        descriptionTitle: "",
-        description: "",
-      });
-
-      setGroupPurchases([
-        {
-          id: 1,
-          groupPurchaseId: 1,
-          regionId: 1,
-          regionName: "온수동",
-          hostUserId: 1,
-          userNickName: "닉네임",
-          currentQuantity: 3,
-          targetQuantity: 12,
-          groupEndAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 3).toISOString(),
-          status: "OPEN",
-        },
-        {
-          id: 2,
-          groupPurchaseId: 2,
-          regionId: 1,
-          regionName: "오류동",
-          hostUserId: 2,
-          userNickName: "총대왕",
-          currentQuantity: 7,
-          targetQuantity: 12,
-          groupEndAt: new Date(Date.now() + 1000 * 60 * 60 * 24 * 1).toISOString(),
-          status: "OPEN",
-        },
-      ]);
-
-      setIsLoading(false);
-      return;
-    }
-
     const load = async () => {
       setIsLoading(true);
+
       await reloadGroupPurchases();
 
       try {
-        const fn = (API as any).getProductById as ((id: number) => Promise<any>) | undefined;
-        if (!fn) throw new Error("getProductById is not exported in api.ts");
-
-        const prodRes = await fn(pid);
-        setProduct(prodRes?.data?.data ?? null);
+        if ((fallbackProduct as any)?.id) {
+          const raw = fallbackProduct as any;
+          if (typeof raw.productName === "string") {
+            setProduct(normalizeProductDetail(raw, pid, fallbackCategory));
+          } else {
+            setProduct({
+              id: Number(raw.id),
+              category: (fallbackCategory ?? "FOOD") as ProductCategory,
+              productName: String(raw.title ?? ""),
+              price: Number(raw.singlePurchasePrice ?? 0),
+              stockQuantity: 0,
+              unitQuantity: 1,
+              imageUrl: raw.imageUrl,
+              storeName: undefined,
+              descriptionTitle: undefined,
+              description: undefined,
+              unitPrice: undefined,
+            });
+          }
+        } else {
+          const prodRes = await getProductById(pid);
+          const raw = prodRes.data.data as any;
+          setProduct(raw ? normalizeProductDetail(raw, pid, fallbackCategory) : null);
+        }
       } catch (e) {
-        console.error("product detail load failed:", e);
+        console.error("product load failed:", e);
         setProduct(null);
       } finally {
         setIsLoading(false);
@@ -184,20 +183,11 @@ export default function ProductGroupPurchaseListPage() {
     };
 
     load();
-  }, [pid]);
-
-  const openGroupPurchases = useMemo(
-    () => groupPurchases.filter((gp) => gp.status === "OPEN"),
-    [groupPurchases]
-  );
+  }, [fallbackCategory, fallbackProduct, pid]);
 
   const handleClickJoin = (gp: GroupPurchaseListItem) => {
     setSelectedGp(gp);
     setIsJoinOpen(true);
-  };
-
-  const handleOpenCreate = () => {
-    setIsCreateOpen(true);
   };
 
   if (isLoading) {
@@ -205,8 +195,8 @@ export default function ProductGroupPurchaseListPage() {
       <div>
         <Header user={user} onLogout={handleLogout} />
         <CategoryNav user={user} />
-        <main className="app-layout gpListPage">
-          <div className="gpListPage__loading">불러오는 중...</div>
+        <main className="app-layout product-detail" style={{ paddingBottom: "40px" }}>
+          <div className="product-detail__loading">불러오는 중...</div>
         </main>
       </div>
     );
@@ -217,77 +207,91 @@ export default function ProductGroupPurchaseListPage() {
       <Header user={user} onLogout={handleLogout} />
       <CategoryNav user={user} />
 
-      <main className="app-layout gpListPage">
-        <div className="gpListPage__inner">
-          <div className="gpListPage__topBar">
-            <button type="button" className="gpListPage__createBtn" onClick={handleOpenCreate}>
-              공구 만들기
-            </button>
-          </div>
+      <main className="app-layout product-detail" style={{ paddingBottom: "40px" }}>
+        <div className="product-detail__inner">
+          <section className="product-detail__gpSection gpListScope">
+            <div
+              className="product-detail__gpHeader gpListScope__header"
+              style={{ display: "flex", alignItems: "center", gap: "12px" }}
+            >
+              <button
+                type="button"
+                className="product-detail__moreBtn"
+                onClick={() => navigate(`/products/${pid}`, { state: { product, category: product?.category } })}
+                style={{ width: "auto" }}
+              >
+                &lt; 상품으로
+              </button>
+              <h2 className="product-detail__gpTitle gpListScope__title" style={{ margin: 0 }}>
+                {product?.productName ?? "상품"} 공구
+              </h2>
+            </div>
 
-          <div className="gpListPage__list">
-            {openGroupPurchases.length === 0 && <div className="gpListPage__empty">진행중인 공구가 없어요</div>}
+            <div className="product-detail__gpList gpListScope__list">
+              {openGroupPurchases.length === 0 && <div className="product-detail__emptyGp">진행중인 공구가 없어요</div>}
 
-            {openGroupPurchases.map((gp) => {
-              const gpId =
-                (gp as any).groupPurchaseId ??
-                (gp as any).id ??
-                `${gp.regionName}-${gp.hostUserId}-${gp.groupEndAt}`;
+              {openGroupPurchases.map((gp) => {
+                const gpId = Number((gp as any).groupPurchaseId ?? (gp as any).id);
 
-              const current = Number(gp.currentQuantity ?? 0);
-              const target = Number(gp.targetQuantity ?? 0);
+                const current = Number((gp as any).currentQuantity ?? 0);
+                const target = Number((gp as any).targetQuantity ?? 0);
 
-              return (
-                <button
-                  key={gpId}
-                  type="button"
-                  className="gp-row"
-                  onClick={() => handleClickJoin(gp)}
-                >
-                  <div className="gp-row__left">
-                    <div className="gp-row__host">{gp.userNickName ?? "-"}</div>
-                    <div className="gp-row__text">님의 공구 참여하기</div>
-                  </div>
+                const participantsRaw = (gp as any).totalParticipation ?? (gp as any).total_participation;
+                const participants = Number(participantsRaw ?? 0);
 
-                  <div className="gp-row__cols">
-                    <div className="gp-row__col gp-row__progress">
-                      <span className="gp-row__numBlue">{String(current).padStart(2, "0")}</span>
-                      <span className="gp-row__numBlack"> / {String(target).padStart(2, "0")}</span>
+                const host = (gp as any).userNickName ?? (gp as any).hostNickName ?? (gp as any).hostName ?? "-";
+                const regionLabel = (gp as any).dong ?? (gp as any).regionName ?? "-";
+
+                return (
+                  <button key={gpId} type="button" className="gp-row" onClick={() => handleClickJoin(gp)}>
+                    <div className="gp-row__left">
+                      <div className="gp-row__host">{host}</div>
+                      <div className="gp-row__status">모집중</div>
                     </div>
 
-                    <div className="gp-row__col gp-row__participants">
-                      <span className="gp-row__numBlue">{current}</span>
-                      <span className="gp-row__participantsLabel">명 참가중</span>
-                    </div>
+                    <div className="gp-row__cols">
+                      <div className="gp-row__col gp-row__progress">
+                        <span className="gp-row__numBlue">{current.toLocaleString("ko-KR")}</span>
+                        <span className="gp-row__numBlack"> / {target.toLocaleString("ko-KR")}</span>
+                      </div>
 
-                    <div className="gp-row__col gp-row__deadline">{formatDeadline(gp.groupEndAt)}</div>
-                    <div className="gp-row__col gp-row__region">{gp.regionName ?? "-"}</div>
-                  </div>
-                </button>
-              );
-            })}
-          </div>
+                      <div className="gp-row__col gp-row__participants">
+                        <span className="gp-row__numBlue">{participants.toLocaleString("ko-KR")}</span>
+                        <span className="gp-row__participantsLabel">명 참가중</span>
+                      </div>
+
+                      <div className="gp-row__col gp-row__region">{regionLabel}</div>
+                    </div>
+                  </button>
+                );
+              })}
+
+              <button type="button" className="gp-row gp-row--create" onClick={() => setIsCreateOpen(true)}>
+                새 공구 추가하기
+              </button>
+            </div>
+          </section>
         </div>
       </main>
 
-      {/* 공구 만들기 모달 */}
       {product && (
         <GPCreateModal
           isOpen={isCreateOpen}
-          onClose={() => setIsCreateOpen(false)}
+          onClose={async () => {
+            setIsCreateOpen(false);
+            await reloadGroupPurchases();
+          }}
           productId={product.id}
           productName={product.productName}
           packagePrice={product.price}
-          packCount={product.unitQuantity ?? 12}
-          eachPriceFromBE={(product as any)?.eachPrice}
+          packCount={packCount}
           user={user}
-          onPaid={(payload: { productId: number; productName: string; totalPrice: number }) => {
+          onPaid={(payload: { productId: number; productName: string; totalPrice: number; groupPurchaseId: number }) => {
             const buyerName = user.nickName ?? user.name ?? "익명";
-            const orderNo = `GP-${Date.now()}`;
 
             navigate("/payment/success", {
               state: {
-                orderNo,
+                groupPurchaseId: payload.groupPurchaseId,
                 buyerName,
                 productId: payload.productId,
                 productName: payload.productName,
@@ -298,21 +302,47 @@ export default function ProductGroupPurchaseListPage() {
         />
       )}
 
-      {/* 공구 참여 모달 */}
       {isJoinOpen && product && selectedGp && (
         <GPJoinModal
           isOpen={isJoinOpen}
-          onClose={() => {
+          onClose={async () => {
             setIsJoinOpen(false);
             setSelectedGp(null);
+            await reloadGroupPurchases();
           }}
           user={user}
           groupPurchase={selectedGp}
           productId={product.id}
           productName={product.productName}
           packagePrice={product.price}
-          packCount={product.unitQuantity ?? 1}
-          eachPriceFromBE={(product as any)?.eachPrice as number | undefined}
+          packCount={packCount}
+          eachPriceFromBE={eachPrice}
+          onPaid={(payload: {
+            productId: number;
+            productName: string;
+            totalPrice: number;
+            buyQuantity?: number;
+            paymentMethod?: string;
+            groupPurchaseId: number;
+            participationId?: number;
+            buyerContact?: string;
+          }) => {
+            const buyerName = user.nickName ?? user.name ?? "익명";
+
+            navigate("/payment/success", {
+              state: {
+                groupPurchaseId: payload.groupPurchaseId,
+                buyerName,
+                productId: payload.productId,
+                productName: payload.productName,
+                totalPrice: payload.totalPrice,
+                buyQuantity: payload.buyQuantity,
+                paymentMethod: payload.paymentMethod,
+                participationId: payload.participationId,
+                buyerContact: payload.buyerContact,
+              },
+            });
+          }}
         />
       )}
     </div>

@@ -1,5 +1,17 @@
 /* src/pages/ProductGroupPurchaseListPage.css */
 
+.gpListScope__header {
+  margin-bottom: 30px; 
+}
+
+.gpListScope__list {
+  margin-top: 0; 
+}
+
+.gpListScope__title {
+  font-weight: 800; 
+}
+
 .gpListPage {
   padding-top: 24px;
   padding-bottom: 60px;

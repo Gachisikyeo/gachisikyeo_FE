@@ -1,4 +1,4 @@
-// // src/pages/PopularPage.tsx
+// src/pages/PopularPage.tsx
 import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Header from "../components/Header";
@@ -10,13 +10,17 @@ import { clearAuth, getAuthUser, type AuthUser } from "../auth/authStorage";
 import { getPopularProducts, logout, type PopularProductResponse } from "../api/api";
 
 function toCardProduct(p: PopularProductResponse): Product {
+  const unitPrice =
+    (p as any).unitPrice ??
+    ((p as any).unitQuantity ? Math.ceil(p.price / (p as any).unitQuantity) : p.price);
+
   return {
     id: p.productId,
     title: p.productName,
     imageUrl: p.imageUrl,
     minOrderQty: 1,
     singlePurchasePrice: p.price,
-    priceFrom: p.price,
+    priceFrom: unitPrice,
   };
 }
 

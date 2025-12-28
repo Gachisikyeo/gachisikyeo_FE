@@ -10,7 +10,7 @@ type CategoryNavProps = {
 
 const menuItems = [
   { label: "인기 상품", to: "/popular" },
-  { label: "최근 등록된 공구", to: "/recent" },
+  { label: "최근 등록된 상품", to: "/recent" },
   { label: "식품", to: "/category/food" },
   { label: "비식품", to: "/category/non-food" },
   { label: "의류", to: "/category/clothing" },

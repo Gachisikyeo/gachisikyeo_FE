@@ -96,7 +96,6 @@ export default function EmailSignup() {
     showMissingMsg();
     if (!canSubmit) return;
 
-    // required 걸어둔 input들 유효성 체크
     const ok = formRef.current?.reportValidity?.() ?? true;
     if (!ok) return;
 
@@ -104,10 +103,6 @@ export default function EmailSignup() {
     await doSignup();
   };
 
-  // const onSubmit = (e: React.FormEvent) => {
-  //   e.preventDefault();
-  //   trySubmit();
-  // };
   const onSubmit = (e: FormEvent<HTMLFormElement>) => {
   e.preventDefault();
   trySubmit();
