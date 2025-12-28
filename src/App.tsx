@@ -1,4 +1,5 @@
 // src/App.tsx
+import { useEffect, useState } from "react";
 import { Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
 import Login from "./pages/Login";
@@ -28,12 +29,22 @@ import MyPage from "./pages/MyPage";
 import OrderDetailPage from "./pages/OrderDetailPage";
 
 
-import { getAuthUser } from "./auth/authStorage";
+import {
+  getAuthUser,
+  initAuthFromOAuthRedirect,
+  type AuthUser,
+} from "./auth/authStorage";
 
 import "./App.css";
 
 function App() {
-  const user = getAuthUser();
+  initAuthFromOAuthRedirect(); 
+  const [user, setUser] = useState<AuthUser>(() => getAuthUser());
+
+  useEffect(() => {
+    const changed = initAuthFromOAuthRedirect();
+    if (changed) setUser(getAuthUser());
+  }, []);
 
   return (
     <Routes>
@@ -60,11 +71,13 @@ function App() {
 
       <Route path="/products/:productId" element={<ProductDetailPage />} />
       <Route path="/payment/success" element={<PaymentSuccessPage />} />
-      <Route path="/products/:productId/group-purchases" element={<ProductGroupPurchaseListPage />} />
+      <Route
+        path="/products/:productId/group-purchases"
+        element={<ProductGroupPurchaseListPage />}
+      />
 
       <Route path="/mypage" element={<MyPage />} />
       <Route path="/mypage/orders/:orderId" element={<OrderDetailPage />} />
-
     </Routes>
   );
 }

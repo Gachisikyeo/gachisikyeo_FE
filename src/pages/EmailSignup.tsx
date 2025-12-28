@@ -11,7 +11,7 @@ import Terms2Modal from "../components/Terms2Modal";
 import { signup } from "../api/api";
 
 import "./EmailSignup.css";
-import Logo from "../assets/logo.png";
+import Logo from "../assets/logo2.png";
 
 type UserType = "SELLER" | "BUYER" | null;
 

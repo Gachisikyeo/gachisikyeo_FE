@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { FiUser } from "react-icons/fi";
 import { HiOutlineLocationMarker } from "react-icons/hi";
 
-import Logo from "../assets/logo.png";
+import Logo from "../assets/logo2.png";
 import AddressModal from "../components/AddressModal";
 import { oauth2Signup } from "../api/api";
 import {

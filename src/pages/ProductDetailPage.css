@@ -34,7 +34,9 @@
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  object-fit: cover;
 }
+
 
 .product-detail__image {
   width: 100%;

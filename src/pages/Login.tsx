@@ -4,7 +4,7 @@ import { useNavigate } from "react-router-dom";
 import { FiMail, FiLock } from "react-icons/fi";
 import { FcGoogle } from "react-icons/fc";
 import "./Login.css";
-import Logo from "../assets/logo.png";
+import Logo from "../assets/logo2.png";
 import { getGoogleAuthorizationUrl, login } from "../api/api";
 import { saveAuthUser, saveTokens } from "../auth/authStorage";
 
