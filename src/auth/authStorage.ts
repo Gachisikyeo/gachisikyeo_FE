@@ -176,15 +176,26 @@ function pickUserTypeFromPayload(payload: any): UserType {
 
 export function initAuthFromOAuthRedirect(): boolean {
   try {
+    // const rawHash = window.location.hash?.startsWith("#")
+    //   ? window.location.hash.slice(1)
+    //   : window.location.hash;
+
+    // if (!rawHash) return false;
+
+    // const params = new URLSearchParams(rawHash);
+    // const accessToken = params.get("accessToken") ?? "";
+    // const refreshToken = params.get("refreshToken") ?? "";
+    const searchParams = new URLSearchParams(window.location.search);
+
     const rawHash = window.location.hash?.startsWith("#")
       ? window.location.hash.slice(1)
       : window.location.hash;
 
-    if (!rawHash) return false;
+    const hashParams = new URLSearchParams(rawHash ?? "");
 
-    const params = new URLSearchParams(rawHash);
-    const accessToken = params.get("accessToken") ?? "";
-    const refreshToken = params.get("refreshToken") ?? "";
+    const accessToken = searchParams.get("accessToken") ?? hashParams.get("accessToken") ?? "";
+    const refreshToken = searchParams.get("refreshToken") ?? hashParams.get("refreshToken") ?? "";
+
 
     if (!accessToken && !refreshToken) return false;
 
@@ -204,7 +215,15 @@ export function initAuthFromOAuthRedirect(): boolean {
       });
     }
 
-    window.history.replaceState({}, "", window.location.pathname + window.location.search);
+    // window.history.replaceState({}, "", window.location.pathname + window.location.search);
+    const url = new URL(window.location.href);
+    url.hash = "";
+    url.searchParams.delete("accessToken");
+    url.searchParams.delete("refreshToken");
+
+    const qs = url.searchParams.toString();
+    window.history.replaceState({}, "", url.pathname + (qs ? `?${qs}` : ""));
+
     return true;
   } catch {
     return false;

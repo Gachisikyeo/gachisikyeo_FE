@@ -1,5 +1,5 @@
-// // 공구 참여 모달
-// // src/components/GroupPurchaseJoinModal.tsx
+// 공구 참여 모달
+// src/components/GroupPurchaseJoinModal.tsx
 import { useEffect, useMemo, useState } from "react";
 
 import type { AuthUser } from "../auth/authStorage";
@@ -89,18 +89,22 @@ export default function GroupPurchaseJoinModal({
     return Number.isFinite(n) ? n : 0;
   }, [groupPurchase]);
 
+  const [joinDetail, setJoinDetail] = useState<GroupPurchaseJoinDetailDto | null>(null);
+
   const minimumOrderUnit = useMemo(() => {
+    const fromDetail = joinDetail?.minimumOrderUnit;
+    if (typeof fromDetail === "number" && fromDetail > 0) return fromDetail;
+
     const raw = (groupPurchase as any)?.minimumOrderUnit as number | undefined;
     if (typeof raw === "number" && raw > 0) return raw;
+
     return 1;
-  }, [groupPurchase]);
+  }, [groupPurchase, joinDetail]);
 
   const currentQuantity = useMemo(() => {
     const v = (groupPurchase as any)?.currentQuantity as number | undefined;
     return typeof v === "number" && v >= 0 ? v : 0;
   }, [groupPurchase]);
-
-  const [joinDetail, setJoinDetail] = useState<GroupPurchaseJoinDetailDto | null>(null);
 
   useEffect(() => {
     if (!isOpen) return;
@@ -159,15 +163,14 @@ export default function GroupPurchaseJoinModal({
   useEffect(() => {
     if (!isOpen) return;
 
-    const initQty =
-      remainingQuantity <= 0 ? 0 : clamp(minimumOrderUnit, 1, Math.max(1, maxBuyQuantity || 1));
+    const initQty = remainingQuantity < minimumOrderUnit ? 0 : minimumOrderUnit;
 
     setBuyQuantity(initQty);
     setPhone("");
     setAgreeDeadline(false);
     setAgreePickup(false);
     setIsSubmitting(false);
-  }, [isOpen, minimumOrderUnit, maxBuyQuantity, remainingQuantity]);
+  }, [isOpen, minimumOrderUnit, remainingQuantity]);
 
   const totalPricePreview = useMemo(() => eachPrice * buyQuantity, [eachPrice, buyQuantity]);
 
@@ -244,10 +247,7 @@ export default function GroupPurchaseJoinModal({
 
         <div className="gpJoin-section">
           <div className="gpJoin-sectionTitle">공구 마감기한 확인</div>
-            <input
-              className="gpJoin-readonlyInput"
-              value={groupEndAt ? `${formatDateOnly(groupEndAt)} 23:59` : ""}
-            />
+          <input className="gpJoin-readonlyInput" value={groupEndAt ? `${formatDateOnly(groupEndAt)} 23:59` : ""} />
           <label className="gpJoin-checkRow">
             <input
               type="checkbox"
@@ -277,7 +277,13 @@ export default function GroupPurchaseJoinModal({
         </div>
 
         <div className="gpJoin-qtyBlock">
-          <div className="gpJoin-label">구매 수량</div>
+          <div className="gpJoin-label">
+            구매 수량
+            <span style={{ marginLeft: 8, fontSize: 12, opacity: 0.75 }}>
+              구매가능 최소수량 {minimumOrderUnit}개
+            </span>
+          </div>
+
           <div className="gpJoin-qtyRow">
             <button
               type="button"
@@ -344,3 +350,4 @@ export default function GroupPurchaseJoinModal({
     </div>
   );
 }
+

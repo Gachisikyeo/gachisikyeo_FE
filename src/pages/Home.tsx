@@ -10,7 +10,9 @@ import AdBanner from "../components/AdBanner";
 import ProductSection from "../components/ProductSection";
 
 import type { Product } from "../components/ProductCard";
-import { clearAuth, getAuthUser, type AuthUser } from "../auth/authStorage";
+// import { clearAuth, getAuthUser, type AuthUser } from "../auth/authStorage";
+import { clearAuth, getAuthUser, initAuthFromOAuthRedirect, type AuthUser } from "../auth/authStorage";
+
 import { getMypageProfile } from "../api/api";
 
 
@@ -51,20 +53,23 @@ function Home() {
   //   setUser(getAuthUser());
   // }, []);
   useEffect(() => {
-  const initUser = async () => {
-    const cur = getAuthUser();
-    setUser(cur);
+    const initUser = async () => {
+      const redirected = initAuthFromOAuthRedirect();
 
-    if (cur.isLoggedIn && (!cur.nickName || !cur.lawDong?.dong)) {
-      try {
-        await getMypageProfile(); 
-      } catch {}
-      setUser(getAuthUser()); 
-    }
-  };
+      const cur = getAuthUser();
+      setUser(cur);
 
-  initUser();
-}, []);
+      if (cur.isLoggedIn && (redirected || !cur.nickName || !cur.lawDong?.dong)) {
+        try {
+          await getMypageProfile();
+        } catch {}
+        setUser(getAuthUser());
+      }
+    };
+
+    initUser();
+  }, []);
+
 
 
   useEffect(() => {

@@ -399,6 +399,7 @@ export type GroupPurchaseJoinDetailDto = {
   groupEndAt: string;
   pickupLocation: string;
   pickupAt: string;
+  minimumOrderUnit: number;
 };
 
 export const getGroupPurchaseJoinDetail = (groupPurchaseId: number) => {
