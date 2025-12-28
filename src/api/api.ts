@@ -4,11 +4,12 @@ import axios, { type AxiosError, type AxiosRequestConfig } from "axios";
 import {
   clearAuth,
   getAccessToken,
-  getRefreshToken,
-  saveTokens,
   getAuthUser,
+  getRefreshToken,
   saveAuthUser,
+  saveTokens,
 } from "../auth/authStorage";
+
 
 const API_ORIGIN = ((import.meta.env.VITE_API_ORIGIN as string) || "https://gachisikyeo.duckdns.org").replace(/\/+$/, "");
 const ENV_BASE = import.meta.env.VITE_API_BASE_URL as string | undefined;
@@ -568,34 +569,33 @@ export type CompletedGroupPurchaseDetailDto = {
 export const getMypageProfile = async () => {
   const res = await api.get<ApiResponseTemplate<MyProfileResponseDto>>("/api/mypage/profile");
 
-  try {
-    if (res.data.success && res.data.data) {
-      const p = res.data.data;
-      const cur = getAuthUser();
-
-      if (cur.isLoggedIn) {
-        const ut = String(p.userType ?? "").toUpperCase();
-        const nextUserType =
-          ut.includes("SELLER") ? "SELLER" : ut.includes("BUYER") || ut.includes("USER") ? "BUYER" : cur.userType;
-
-        const next = {
-          ...cur,
-          userType: nextUserType,
-          email: cur.email ?? p.email,
-          nickName: cur.nickName ?? p.nickname,
-          lawDong:
-            p.lawDong != null
-              ? cur.lawDong ?? { id: -1, sido: "", sigungu: "", dong: p.lawDong }
-              : cur.lawDong,
-        };
-
-        saveAuthUser(next);
-      }
-    }
-  } catch {}
+  const profile = res.data?.data;
+  if (profile) {
+    const stored = getAuthUser();
+    const nextUser = {
+      ...stored,
+      isLoggedIn: true,
+      userType:
+        profile.userType === "SELLER" || profile.userType === "BUYER"
+          ? profile.userType
+          : stored.userType,
+      email: profile.email ?? stored.email,
+      nickName: profile.nickname ?? stored.nickName,
+      lawDong: profile.lawDong
+        ? {
+            id: stored.lawDong?.id ?? 0,
+            sido: stored.lawDong?.sido ?? "",
+            sigungu: stored.lawDong?.sigungu ?? "",
+            dong: profile.lawDong,
+          }
+        : stored.lawDong,
+    };
+    saveAuthUser(nextUser);
+  }
 
   return res;
 };
+
 
 export const getMypageParticipationsOngoing = (params: { page?: number; size?: number }) => {
   return api.get<ApiResponseTemplate<SliceResponse<MyParticipationGroupPurchaseDto>>>(
