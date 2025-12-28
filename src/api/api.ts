@@ -568,34 +568,48 @@ export type CompletedGroupPurchaseDetailDto = {
 //   return api.get<ApiResponseTemplate<MyProfileResponseDto>>("/api/mypage/profile");
 // };
 export const getMypageProfile = async () => {
-  const res = await api.get<ApiResponseTemplate<MyProfileResponseDto>>("/api/mypage/profile");
+  const res = await api.get<any>("/api/mypage/profile");
 
-  const profile = res.data?.data;
-  if (profile) {
-    const stored = getAuthUser();
-    const nextUser = {
-      ...stored,
-      isLoggedIn: true,
-      userType:
-        profile.userType === "SELLER" || profile.userType === "BUYER"
-          ? profile.userType
-          : stored.userType,
-      email: profile.email ?? stored.email,
-      nickName: profile.nickname ?? stored.nickName,
-      lawDong: profile.lawDong
-        ? {
-            id: stored.lawDong?.id ?? 0,
-            sido: stored.lawDong?.sido ?? "",
-            sigungu: stored.lawDong?.sigungu ?? "",
-            dong: profile.lawDong,
-          }
-        : stored.lawDong,
-    };
-    saveAuthUser(nextUser);
-  }
+  try {
+    const raw = res.data;
+    const p: MyProfileResponseDto | null = raw?.data ?? raw ?? null;
+
+    if (p && typeof p === "object") {
+      const cur = getAuthUser();
+      if (cur.isLoggedIn) {
+        const utRaw = String((p as any).userType ?? "");
+        const utUpper = utRaw.toUpperCase();
+
+        const nextUserType =
+          utUpper.includes("SELLER") || utRaw.includes("판매")
+            ? "SELLER"
+            : utUpper.includes("BUYER") || utUpper.includes("USER") || utRaw.includes("구매")
+            ? "BUYER"
+            : cur.userType;
+
+        const nickname = String((p as any).nickname ?? "").trim();
+        const email = String((p as any).email ?? "").trim();
+        const dong = (p as any).lawDong != null ? String((p as any).lawDong).trim() : "";
+
+        const next = {
+          ...cur,
+          userType: nextUserType,
+          email: cur.email && cur.email.trim() ? cur.email : email || cur.email,
+          nickName: cur.nickName && cur.nickName.trim() ? cur.nickName : nickname || cur.nickName,
+          lawDong:
+            dong
+              ? cur.lawDong ?? { id: -1, sido: "", sigungu: "", dong }
+              : cur.lawDong,
+        };
+
+        saveAuthUser(next);
+      }
+    }
+  } catch {}
 
   return res;
 };
+
 
 
 export const getMypageParticipationsOngoing = (params: { page?: number; size?: number }) => {
