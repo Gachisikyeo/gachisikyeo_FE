@@ -1,6 +1,5 @@
 // 상품 결제 완료 페이지
-// src/pages/PaymentSuccessPage.tsx
-import { useMemo } from "react";
+import { useMemo, useRef, useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 
 import Header from "../components/Header";
@@ -8,15 +7,25 @@ import CategoryNav from "../components/CategoryNav";
 import { getAuthUser, type AuthUser } from "../auth/authStorage";
 import Logo from "../assets/logo2.png";
 
+import { confirmParticipationPayment } from "../api/api";
+
 import "./PaymentSuccessPage.css";
 
 type PaymentState = {
   orderNo?: string;
   groupPurchaseId?: number;
+  participationId?: number;
+
   productName?: string;
   totalPrice?: number;
 
   buyerName?: string;
+
+  buyQuantity?: number;
+  eachPrice?: number;
+
+  pickupLocation?: string;
+  pickupAt?: string;
 
   paymentMethod?: "NAVER" | "KAKAO";
 };
@@ -31,6 +40,11 @@ type MyOrder = {
   quantity: number;
   eachPrice: number;
   shippingFee: number;
+
+  groupPurchaseId?: number;
+  participationId?: number;
+
+  buyerName?: string;
 
   pickupLocation?: string;
   pickupAt?: string;
@@ -88,20 +102,74 @@ export default function PaymentSuccessPage() {
 
   const buyerName = state.buyerName ?? user.nickName ?? user.name ?? "구매자";
 
-  const handleGoOrderDetail = () => {
+  const quantity = useMemo(() => {
+    const q = Number(state.buyQuantity ?? 1);
+    return Number.isFinite(q) && q > 0 ? q : 1;
+  }, [state.buyQuantity]);
+
+  const eachPrice = useMemo(() => {
+    const ep = Number(state.eachPrice);
+    if (Number.isFinite(ep) && ep > 0) return ep;
+    return quantity > 0 ? Math.round(totalPrice / quantity) : totalPrice;
+  }, [quantity, state.eachPrice, totalPrice]);
+
+  const confirmedRef = useRef(false);
+  const [confirming, setConfirming] = useState(false);
+
+  const confirmPaymentIfNeeded = async () => {
+    const participationId = Number(state.participationId);
+
+    if (!Number.isFinite(participationId) || participationId <= 0) return true;
+    if (confirmedRef.current) return true;
+    if (confirming) return false;
+
+    setConfirming(true);
+    try {
+      await confirmParticipationPayment(participationId);
+      confirmedRef.current = true;
+      return true;
+    } catch (e: any) {
+      const msg = e?.response?.data?.message || e?.message || "결제 확정에 실패했어 ㅠㅠ";
+      alert(msg);
+      return false;
+    } finally {
+      setConfirming(false);
+    }
+  };
+
+  const handleGoOrderDetail = async () => {
+    const ok = await confirmPaymentIfNeeded();
+    if (!ok) return;
+
+    const participationId =
+      typeof state.participationId === "number" && state.participationId > 0 ? state.participationId : undefined;
+
+    const orderIdForRoute = participationId ? String(participationId) : orderNo;
+
     const order: MyOrder = {
-      orderId: orderNo,
-      status: "IN_PROGRESS",
+      orderId: orderIdForRoute,
+      status: "COMPLETED",
       productName,
       totalPrice,
-      quantity: 1,
-      eachPrice: totalPrice,
+      quantity,
+      eachPrice,
       shippingFee: 0,
+      groupPurchaseId: typeof state.groupPurchaseId === "number" ? state.groupPurchaseId : undefined,
+      participationId,
+      buyerName,
+      pickupLocation: state.pickupLocation,
+      pickupAt: state.pickupAt,
     };
 
     saveMyOrder(order);
 
-    navigate(`/mypage/orders/${orderNo}`, { state: { order } });
+    navigate(`/mypage/orders/${orderIdForRoute}`, { state: { order } });
+  };
+
+  const handleGoHome = async () => {
+    const ok = await confirmPaymentIfNeeded();
+    if (!ok) return;
+    navigate("/");
   };
 
   return (
@@ -115,9 +183,7 @@ export default function PaymentSuccessPage() {
             <img src={Logo} alt="같이시켜 로고" />
           </div>
 
-          <div className="payment-success__message">
-            결제가 정상적으로 완료되었습니다.
-          </div>
+          <div className="payment-success__message">결제가 정상적으로 완료되었습니다.</div>
 
           <div className="payment-success__card">
             <div className="payment-success__row">
@@ -144,10 +210,15 @@ export default function PaymentSuccessPage() {
           </div>
 
           <div className="payment-success__buttons">
-            <button type="button" className="payment-success__btn" onClick={handleGoOrderDetail}>
+            <button type="button" className="payment-success__btn" onClick={handleGoOrderDetail} disabled={confirming}>
               주문상세 보기
             </button>
-            <button type="button" className="payment-success__btn payment-success__btn--primary" onClick={() => navigate("/")}>
+            <button
+              type="button"
+              className="payment-success__btn payment-success__btn--primary"
+              onClick={handleGoHome}
+              disabled={confirming}
+            >
               홈으로
             </button>
           </div>

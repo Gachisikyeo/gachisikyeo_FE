@@ -494,13 +494,6 @@ export const getParticipationPaymentInfo = (participationId: number) => {
   return api.get<ApiResponseTemplate<any>>(`/api/participations/${participationId}`);
 };
 
-export const confirmParticipationPayment = (participationId: number) => {
-  return api.post<ApiResponseTemplate<any>>(
-    `/api/participations/${participationId}/payments/confirm`
-  );
-};
-
-
 export type PageResponse<T> = {
   content: T[];
   totalElements?: number;
@@ -706,6 +699,24 @@ export type MonthlySalesResponse = {
 
 export const getSellerMonthlySales = (params: { year: number; month: number }) => {
   return api.get<ApiResponseTemplate<MonthlySalesResponse>>("/api/seller/dashboard/monthly-sales", { params });
+};
+
+export type PaymentConfirmResponseDto = {
+  paymentId: number;
+  participationId: number;
+  groupPurchaseId: number;
+  amount: number;
+  paymentStatus: "PAID";
+  currentQuantity: number;
+  targetQuantity: number;
+  groupPurchaseStatus: "OPEN" | "CLOSED";
+  paidAt: string;
+};
+
+export const confirmParticipationPayment = async (participationId: number) => {
+  return await api.post<ApiResponseTemplate<PaymentConfirmResponseDto>>(
+    `/api/participations/${participationId}/payments/confirm`
+  );
 };
 
 export default api;
